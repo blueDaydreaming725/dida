@@ -91,14 +91,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if mainWindow == nil {
             guard let store, let state else { return }
             let controller = NSHostingController(
-                rootView: RootPopoverView()
-                    .padding(.top, 24) // 给透明标题栏的通行灯留位
-                    .environmentObject(store)
-                    .environmentObject(state))
-            controller.sizingOptions = .preferredContentSize
+                rootView: ScrollView {
+                    RootPopoverView()
+                        .padding(.top, 24) // 给透明标题栏的通行灯留位
+                }
+                .frame(width: 330)
+                .scrollIndicators(.hidden)
+                .environmentObject(store)
+                .environmentObject(state))
+            // 不用 preferredContentSize 驱动窗口——它会在显示周期里
+            // 反向改约束触发 NSException（macOS 26 实测崩溃），改为显式量尺寸
+            controller.sizingOptions = []
+            let fitting = controller.view.fittingSize
+            let width = max(330, fitting.width)
+            let height = max(480, fitting.height)
 
-            let window = NSWindow(contentViewController: controller)
-            window.styleMask = [.titled, .closable, .miniaturizable, .fullSizeContentView]
+            let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: width, height: height),
+                                  styleMask: [.titled, .closable, .miniaturizable, .fullSizeContentView],
+                                  backing: .buffered, defer: false)
             window.title = "滴答"
             window.titlebarAppearsTransparent = true
             window.titleVisibility = .hidden
@@ -106,6 +116,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             window.isOpaque = false
             window.backgroundColor = .clear
             window.isReleasedWhenClosed = false
+            window.contentView = controller.view
             window.contentView?.wantsLayer = true
             window.contentView?.layer?.cornerRadius = 16
             window.contentView?.layer?.masksToBounds = true
