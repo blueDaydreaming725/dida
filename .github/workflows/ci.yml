@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    name: Build (macOS)
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Swift version
+        run: swift --version
+
+      - name: Build (debug)
+        run: swift build
+
+      - name: Build release bundle
+        run: ./scripts/build.sh
+
+      - name: Smoke test (--demo boots and shows windows)
+        run: |
+          ./dist/Dida.app/Contents/MacOS/dida --demo &
+          APP_PID=$!
+          sleep 8
+          if ! kill -0 $APP_PID 2>/dev/null; then
+            echo "app exited unexpectedly" && exit 1
+          fi
+          kill $APP_PID

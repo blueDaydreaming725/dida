@@ -1,0 +1,42 @@
+<svg width="1000" height="220" viewBox="0 0 1000 220" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="滴答 Dida">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1000" y2="220" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#101426"/>
+      <stop offset="0.55" stop-color="#1B1440"/>
+      <stop offset="1" stop-color="#2A1258"/>
+    </linearGradient>
+    <linearGradient id="mark" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#5A70FA"/>
+      <stop offset="1" stop-color="#A05CF5"/>
+    </linearGradient>
+    <linearGradient id="text" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#8FA2FF"/>
+      <stop offset="1" stop-color="#C08BFF"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1000" height="220" rx="20" fill="url(#bg)"/>
+  <rect x="1" y="1" width="998" height="218" rx="19" stroke="#8FA2FF" stroke-opacity="0.18" stroke-width="2"/>
+
+  <!-- 眼睛 + 水滴标志 -->
+  <g transform="translate(120, 62)">
+    <path d="M0 48 C 18 20, 66 20, 84 48 C 66 76, 18 76, 0 48 Z"
+          fill="none" stroke="url(#mark)" stroke-width="7" stroke-linejoin="round"/>
+    <circle cx="42" cy="48" r="15" fill="url(#mark)"/>
+    <path d="M42 12 C 42 12, 34 24, 34 31 C 34 35.6, 37.6 39, 42 39 C 46.4 39, 50 35.6, 50 31 C 50 24, 42 12, 42 12 Z"
+          fill="url(#mark)"/>
+  </g>
+
+  <!-- 词标 -->
+  <text x="240" y="105" font-family="PingFang SC, Hiragino Sans GB, sans-serif"
+        font-size="64" font-weight="700" fill="#FFFFFF">滴答</text>
+  <text x="240" y="172" font-family="SF Pro Rounded, Menlo, sans-serif"
+        font-size="30" font-weight="600" fill="url(#text)">Dida · Eye Drops &amp; 20-20-20 Reminders</text>
+
+  <!-- 菜单栏示意 -->
+  <g transform="translate(790, 60)">
+    <rect x="0" y="0" width="160" height="34" rx="17" fill="#0D1120" stroke="#8FA2FF" stroke-opacity="0.25"/>
+    <text x="24" y="23" font-family="SF Pro, Menlo, sans-serif" font-size="16" fill="#C9D2FF">⌘ 👁 ☕</text>
+    <circle cx="138" cy="17" r="5" fill="url(#mark)"/>
+  </g>
+</svg>
