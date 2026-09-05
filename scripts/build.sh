@@ -42,4 +42,15 @@ PLIST
 printf 'APPL????' > "$APP/Contents/PkgInfo"
 codesign --force --sign - "$APP" 2>/dev/null || true
 
+# 打包 DMG（拖入 Applications 布局）
+VERSION=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$APP/Contents/Info.plist")
+DMG="dist/Dida-$VERSION.dmg"
+rm -f "$DMG"
+STAGING=$(mktemp -d)
+cp -R "$APP" "$STAGING/"
+ln -s /Applications "$STAGING/Applications"
+hdiutil create -volname "Dida" -srcfolder "$STAGING" -ov -format UDZO "$DMG" > /dev/null
+rm -rf "$STAGING"
+
 echo "✅ 构建完成: $APP"
+echo "✅ DMG: $DMG"

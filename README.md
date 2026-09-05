@@ -51,7 +51,7 @@
 
 ### 方式一：下载 Release（推荐）
 
-从 [Releases](https://github.com/blueDaydreaming725/dida/releases) 下载 `Dida-x.x.x.zip`，解压后拖入「应用程序」。
+从 [Releases](https://github.com/blueDaydreaming725/dida/releases) 下载 **`Dida-x.x.x.dmg`**，打开后把 **Dida** 拖入 **Applications** 文件夹（也可选 `zip` 压缩包，解压即用）。
 
 > [!IMPORTANT]
 > 应用采用 ad-hoc 签名（未加入 Apple 开发者计划），首次打开若提示"无法验证开发者"：
