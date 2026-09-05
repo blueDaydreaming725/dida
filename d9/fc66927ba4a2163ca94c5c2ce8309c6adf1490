@@ -1,0 +1,21 @@
+README.md
+  s_56acfdaaa13f85::t_4e00774b9d000d 54
+scripts/build.sh
+  s_56acfdaaa13f85::t_e6febf5eb6ca40 45-54,56
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.43-trip",
+  "base_commit_sha": "d9fc66927ba4a2163ca94c5c2ce8309c6adf1490",
+  "prompts": {},
+  "sessions": {
+    "s_56acfdaaa13f85": {
+      "agent_id": {
+        "tool": "zcode",
+        "id": "sess_188a2e82-08da-44d1-b182-c9867d382674",
+        "model": "GLM-5.3-Flash"
+      },
+      "human_author": "yuxuan.weng <wengyx@trip.com>"
+    }
+  }
+}
