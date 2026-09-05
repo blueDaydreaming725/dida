@@ -55,7 +55,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             UserDefaults.standard.set(true, forKey: "hasLaunchedBefore")
             banner.show(title: "滴答已启动",
                         subtitle: "下次用药 \(clockString(state.nextMed)) · 图标就在菜单栏",
-                        seconds: 8, icon: "eye", tint: Dida.teal)
+                        seconds: 8, icon: "eye", tint: Dida.indigo)
         }
     }
 

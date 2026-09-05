@@ -98,7 +98,7 @@ final class AppState: ObservableObject {
 
         if let brk = nextBreak, now >= brk {
             nextBreak = now.addingTimeInterval(TimeInterval(store.workIntervalMinutes * 60))
-            onBanner?("看远处 20 秒", "离开屏幕，眨眨眼 · 闭眼 20 秒也有效", 20, "eye", Dida.sky)
+            onBanner?("看远处 20 秒", "离开屏幕，眨眨眼 · 闭眼 20 秒也有效", 20, "eye", Dida.blue)
         }
     }
 
@@ -121,13 +121,13 @@ final class AppState: ObservableObject {
             nextMed = now.addingTimeInterval(gap)
             onBanner?("已滴\(store.med1Name) ✓",
                       "\(store.gapMinutes) 分钟后滴\(store.med2Name)",
-                      6, "drop.fill", Dida.teal)
+                      6, "drop.fill", Dida.indigo)
         case .second:
             medStep = .first
             nextMed = nextOccurrence(after: now + 60, times: store.medTimes) ?? now.addingTimeInterval(6 * 3600)
             onBanner?("本轮用药完成 ✓",
                       "下次 \(clockString(nextMed)) · 记得 4 周换新药",
-                      6, "checkmark.circle.fill", Dida.teal)
+                      6, "checkmark.circle.fill", Dida.indigo)
         }
         popupActive = false
         onClosePopup?()
@@ -159,7 +159,7 @@ final class AppState: ObservableObject {
         suspendedUntil = Date().addingTimeInterval(TimeInterval(store.restMinutes * 60))
         restStartedAt = Date()
         onBanner?("休息中 🌿", "\(store.restMinutes) 分钟后自动回来 · ⌥⌘B 提前回来",
-                  5, "leaf.fill", Dida.sky)
+                  5, "leaf.fill", Dida.blue)
         bumpVisual()
     }
 
@@ -167,7 +167,7 @@ final class AppState: ObservableObject {
     func extendRest(by minutes: Int = 5) {
         guard suspendKind == .rest, let until = suspendedUntil else { return }
         suspendedUntil = until.addingTimeInterval(TimeInterval(minutes * 60))
-        onBanner?("好嘞，再休 \(minutes) 分钟", "闭眼、眨眼、看看窗外", 4, "leaf.fill", Dida.sky)
+        onBanner?("好嘞，再休 \(minutes) 分钟", "闭眼、眨眼、看看窗外", 4, "leaf.fill", Dida.blue)
         bumpVisual()
     }
 
@@ -176,7 +176,7 @@ final class AppState: ObservableObject {
         resume(auto: false, quiet: true)
         onBanner?(early ? "已休息 \(formatDuration(rested))" : "休息好了",
                   early ? "闭眼眨眼也有效，继续加油" : "继续工作",
-                  5, "figure.mind.and.body", Dida.sky)
+                  5, "figure.mind.and.body", Dida.blue)
     }
 
     // MARK: 静音（会议模式）
@@ -207,7 +207,7 @@ final class AppState: ObservableObject {
         onBanner?(kind == .mute ? "已静音，安心开会" : "休息中 🌿",
                   "\(minutes) 分钟后自动恢复 · \(hint)", 6,
                   kind == .mute ? "moon.zzz.fill" : "leaf.fill",
-                  kind == .mute ? Dida.amber : Dida.sky)
+                  kind == .mute ? Dida.amber : Dida.blue)
         bumpVisual()
     }
 
@@ -225,7 +225,7 @@ final class AppState: ObservableObject {
         nextBreak = now.addingTimeInterval(TimeInterval(store.workIntervalMinutes * 60))
 
         if !quiet {
-            onBanner?("提醒已恢复", "下次用药 \(clockString(nextMed))", 5, "bell.fill", Dida.teal)
+            onBanner?("提醒已恢复", "下次用药 \(clockString(nextMed))", 5, "bell.fill", Dida.indigo)
         }
         bumpVisual()
     }

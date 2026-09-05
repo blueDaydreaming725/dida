@@ -72,7 +72,7 @@ final class MedPopupController {
     func show(step: AppState.MedStep, med1: String, med2: String, gapMinutes: Int) {
         dismiss(instant: true)
         let isFirst = step == .first
-        let tint: Color = isFirst ? Dida.coral : Dida.teal // 富马=珊瑚，聚乙二醇=青
+        let tint: Color = isFirst ? Dida.indigo : Dida.violet // 富马=蓝，聚乙二醇=紫
         let icon = isFirst ? "eyedropper" : "drop.fill"
         let title = isFirst ? "该滴「\(med1)」了" : "该滴「\(med2)」了"
         let subtitle = isFirst

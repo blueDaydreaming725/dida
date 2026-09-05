@@ -1,18 +1,43 @@
 import SwiftUI
 import AppKit
 
-// MARK: - 配色「晨露」：薄荷/青 = 健康平衡，蓝 = 平静信任（健康应用成熟方案）
+// MARK: - 配色「蓝紫渐变」：蓝 = 富马/休息/平静，紫 = 聚乙二醇，蓝→紫渐变 = 主行动
 enum Dida {
-    /// 主行动色：深青（滴药、完成、提醒中）
-    static let teal = Color(red: 0.05, green: 0.58, blue: 0.53)
-    /// 富马（抗过敏）：珊瑚
-    static let coral = Color(red: 0.95, green: 0.45, blue: 0.34)
-    /// 休息：天蓝
-    static let sky = Color(red: 0.30, green: 0.64, blue: 0.95)
-    /// 静音：琥珀
+    /// 行动蓝（滴药第 1 步 / 提醒中）
+    static let indigo = Color(red: 0.35, green: 0.44, blue: 0.98)
+    /// 紫（滴药第 2 步）
+    static let violet = Color(red: 0.63, green: 0.36, blue: 0.96)
+    /// 休息蓝
+    static let blue = Color(red: 0.25, green: 0.60, blue: 0.98)
+    /// 静音琥珀
     static let amber = Color(red: 0.95, green: 0.62, blue: 0.10)
+    /// 主行动渐变
+    static let action = LinearGradient(colors: [indigo, violet],
+                                       startPoint: .topLeading, endPoint: .bottomTrailing)
     /// 玻璃 1px 描边
     static let hairline = Color.primary.opacity(0.10)
+}
+
+// MARK: - 渐变主按钮
+
+struct GradientProminentStyle: ButtonStyle {
+    var compact = false
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.system(size: compact ? 12 : 14, weight: .semibold))
+            .foregroundStyle(.white)
+            .padding(.vertical, compact ? 5 : 9)
+            .padding(.horizontal, compact ? 10 : 14)
+            .frame(maxWidth: .infinity)
+            .background(
+                RoundedRectangle(cornerRadius: compact ? 7 : 10, style: .continuous)
+                    .fill(Dida.action)
+            )
+            .opacity(configuration.isPressed ? 0.82 : 1)
+            .scaleEffect(configuration.isPressed ? 0.97 : 1)
+            .animation(.easeOut(duration: 0.12), value: configuration.isPressed)
+    }
 }
 
 // MARK: - 真·毛玻璃（NSVisualEffectView，behindWindow 实时模糊桌面内容）
@@ -55,6 +80,20 @@ struct PulseRing: View {
     }
 }
 
+// MARK: - 入场震动
+
+@MainActor
+enum Shake {
+    /// 按给定振幅序列播放横向震动；amplitudes 最后必须是 0
+    static func run(pattern: [CGFloat], durationPerStep: TimeInterval, apply: @escaping (CGFloat) -> Void) {
+        for (index, offset) in pattern.enumerated() {
+            DispatchQueue.main.asyncAfter(deadline: .now() + Double(index) * durationPerStep) {
+                withAnimation(.easeOut(duration: durationPerStep)) { apply(offset) }
+            }
+        }
+    }
+}
+
 // MARK: - 用药强制确认弹窗
 
 struct MedPopupView: View {
@@ -66,6 +105,7 @@ struct MedPopupView: View {
     let onSnooze: () -> Void
 
     @State private var appeared = false
+    @State private var shakeX: CGFloat = 0
 
     var body: some View {
         VStack(spacing: 16) {
@@ -74,7 +114,10 @@ struct MedPopupView: View {
                     PulseRing(tint: iconTint, delay: 0)
                     PulseRing(tint: iconTint, delay: 0.8)
                     Circle()
-                        .fill(iconTint.opacity(0.16))
+                        .fill(
+                            LinearGradient(colors: [iconTint.opacity(0.22), iconTint.opacity(0.10)],
+                                           startPoint: .topLeading, endPoint: .bottomTrailing)
+                        )
                         .frame(width: 54, height: 54)
                     Image(systemName: icon)
                         .font(.system(size: 25, weight: .semibold))
@@ -105,9 +148,7 @@ struct MedPopupView: View {
                     Label("已滴完", systemImage: "checkmark")
                         .frame(maxWidth: .infinity)
                 }
-                .buttonStyle(.borderedProminent)
-                .tint(Dida.teal)
-                .controlSize(.large)
+                .buttonStyle(GradientProminentStyle())
             }
         }
         .padding(20)
@@ -115,8 +156,8 @@ struct MedPopupView: View {
         .background(
             ZStack {
                 GlassBackground(material: .hudWindow, radius: 18)
-                LinearGradient(colors: [iconTint.opacity(0.10), .clear],
-                               startPoint: .top, endPoint: .bottom)
+                LinearGradient(colors: [Dida.indigo.opacity(0.10), Dida.violet.opacity(0.08)],
+                               startPoint: .topLeading, endPoint: .bottomTrailing)
             }
         )
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
@@ -124,17 +165,22 @@ struct MedPopupView: View {
             RoundedRectangle(cornerRadius: 18, style: .continuous)
                 .strokeBorder(Dida.hairline, lineWidth: 1)
         )
-        .shadow(color: .black.opacity(0.30), radius: 24, x: 0, y: 12)
+        .shadow(color: Dida.violet.opacity(0.25), radius: 24, x: 0, y: 12)
         .scaleEffect(appeared ? 1 : 0.80)
         .opacity(appeared ? 1 : 0)
         .offset(y: appeared ? 0 : -14)
+        .offset(x: shakeX)
         .onAppear {
             withAnimation(.spring(response: 0.42, dampingFraction: 0.60)) { appeared = true }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.42) {
+                Shake.run(pattern: [14, -11, 8, -5, 3, -1, 0],
+                          durationPerStep: 0.05) { shakeX = $0 }
+            }
         }
     }
 }
 
-// MARK: - 轻量横幅（弹簧入场 + 实时剩余秒数 + 进度）
+// MARK: - 轻量横幅（弹簧入场 + 震动 + 实时剩余秒数 + 进度）
 
 struct BannerView: View {
     let icon: String
@@ -146,6 +192,7 @@ struct BannerView: View {
 
     @State private var startedAt = Date()
     @State private var appeared = false
+    @State private var shakeX: CGFloat = 0
 
     var body: some View {
         TimelineView(.periodic(from: .now, by: 0.25)) { context in
@@ -154,7 +201,10 @@ struct BannerView: View {
                 HStack(spacing: 10) {
                     ZStack {
                         Circle()
-                            .fill(tint.opacity(0.16))
+                            .fill(
+                                LinearGradient(colors: [tint.opacity(0.24), tint.opacity(0.10)],
+                                               startPoint: .topLeading, endPoint: .bottomTrailing)
+                            )
                             .frame(width: 32, height: 32)
                         Image(systemName: icon)
                             .font(.system(size: 14, weight: .semibold))
@@ -182,7 +232,10 @@ struct BannerView: View {
                     ZStack(alignment: .leading) {
                         Capsule().fill(Color.primary.opacity(0.08))
                         Capsule()
-                            .fill(tint.opacity(0.75))
+                            .fill(
+                                LinearGradient(colors: [Dida.indigo.opacity(0.75), tint.opacity(0.75)],
+                                               startPoint: .leading, endPoint: .trailing)
+                            )
                             .frame(width: proxy.size.width * CGFloat(remaining / Double(seconds)))
                     }
                 }
@@ -194,7 +247,8 @@ struct BannerView: View {
             .background(
                 ZStack {
                     GlassBackground(material: .hudWindow, radius: 14)
-                    tint.opacity(0.05)
+                    LinearGradient(colors: [tint.opacity(0.06), Dida.violet.opacity(0.04)],
+                                   startPoint: .topLeading, endPoint: .bottomTrailing)
                 }
             )
             .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
@@ -208,8 +262,13 @@ struct BannerView: View {
             .scaleEffect(appeared ? 1 : 0.86)
             .opacity(appeared ? 1 : 0)
             .offset(y: appeared ? 0 : -10)
+            .offset(x: shakeX)
             .onAppear {
                 withAnimation(.spring(response: 0.40, dampingFraction: 0.70)) { appeared = true }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.40) {
+                    Shake.run(pattern: [7, -5, 3, -2, 0],
+                              durationPerStep: 0.05) { shakeX = $0 }
+                }
             }
         }
     }
@@ -244,10 +303,10 @@ struct RootPopoverView: View {
     private var header: some View {
         HStack {
             ZStack {
-                Circle().fill(Dida.teal.opacity(0.15)).frame(width: 24, height: 24)
+                Circle().fill(Dida.action).frame(width: 24, height: 24)
                 Image(systemName: "eye")
                     .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(Dida.teal)
+                    .foregroundStyle(.white)
             }
             Text("滴答")
                 .font(.system(size: 15, weight: .bold))
@@ -258,9 +317,9 @@ struct RootPopoverView: View {
 
     private var statusPill: some View {
         let (text, color): (String, Color) = {
-            if state.suspendKind == .rest { return ("休息中", Dida.sky) }
+            if state.suspendKind == .rest { return ("休息中", Dida.blue) }
             if state.suspendKind == .mute { return ("已静音", Dida.amber) }
-            return ("提醒中", Dida.teal)
+            return ("提醒中", Dida.indigo)
         }()
         return HStack(spacing: 5) {
             Circle().fill(color).frame(width: 7, height: 7)
@@ -269,7 +328,7 @@ struct RootPopoverView: View {
         .foregroundStyle(.secondary)
     }
 
-    // MARK: 用药倒计时卡片（着色玻璃 + 大号圆体数字）
+    // MARK: 用药倒计时卡片（蓝紫着色玻璃 + 大号圆体数字）
 
     private var medCard: some View {
         TimelineView(.periodic(from: .now, by: 1)) { context in
@@ -284,14 +343,17 @@ struct RootPopoverView: View {
                     Spacer()
                     Text(stepText)
                         .font(.system(size: 10, weight: .semibold))
-                        .foregroundStyle(Dida.teal)
+                        .foregroundStyle(Dida.indigo)
                         .padding(.horizontal, 7)
                         .padding(.vertical, 2)
-                        .background(Capsule().fill(Dida.teal.opacity(0.12)))
+                        .background(Capsule().fill(Dida.indigo.opacity(0.12)))
                 }
                 Text(countdownMed(now: context.date))
                     .font(.system(size: 25, weight: .semibold, design: .rounded))
-                    .foregroundStyle(Dida.teal)
+                    .foregroundStyle(
+                        LinearGradient(colors: [Dida.indigo, Dida.violet],
+                                       startPoint: .leading, endPoint: .trailing)
+                    )
                     .monospacedDigit()
                 Text(subMed)
                     .font(.system(size: 12))
@@ -299,8 +361,13 @@ struct RootPopoverView: View {
             }
             .padding(14)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(Dida.teal.opacity(0.10)))
+            .background(
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .fill(
+                        LinearGradient(colors: [Dida.indigo.opacity(0.14), Dida.violet.opacity(0.10)],
+                                       startPoint: .topLeading, endPoint: .bottomTrailing)
+                    )
+            )
         }
     }
 
@@ -329,14 +396,14 @@ struct RootPopoverView: View {
             HStack(spacing: 8) {
                 Image(systemName: "leaf")
                     .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(Dida.sky)
+                    .foregroundStyle(Dida.blue)
                 Text("护眼休息")
                     .font(.system(size: 12, weight: .medium))
                     .foregroundStyle(.secondary)
                 Spacer()
                 Text(countdownBreak(now: context.date))
                     .font(.system(size: 14, weight: .semibold, design: .rounded))
-                    .foregroundStyle(Dida.sky)
+                    .foregroundStyle(Dida.blue)
                     .monospacedDigit()
             }
         }
@@ -357,11 +424,8 @@ struct RootPopoverView: View {
             HStack(spacing: 8) {
                 Button(action: { state.medNow() }) {
                     Label("现在滴药", systemImage: "eyedropper")
-                        .frame(maxWidth: .infinity)
                 }
-                .buttonStyle(.borderedProminent)
-                .tint(Dida.teal)
-                .controlSize(.small)
+                .buttonStyle(GradientProminentStyle(compact: true))
 
                 Button(action: { state.toggleRest() }) {
                     Text(state.suspendKind == .rest ? "休息回来" : "休息一下")
@@ -384,7 +448,7 @@ struct RootPopoverView: View {
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.borderedProminent)
-                .tint(Dida.sky)
+                .tint(Dida.blue)
                 .controlSize(.small)
             }
         }
@@ -421,7 +485,7 @@ struct RootPopoverView: View {
                     Image(systemName: "plus.circle")
                 }
                 .buttonStyle(.plain)
-                .foregroundStyle(Dida.teal)
+                .foregroundStyle(Dida.indigo)
                 .disabled(store.medTimes.count >= 6)
             }
             ForEach($store.medTimes) { $time in
