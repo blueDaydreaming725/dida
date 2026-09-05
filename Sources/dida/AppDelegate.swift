@@ -4,6 +4,7 @@ import Combine
 
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
+    private static let bundleID = "com.blueDaydreaming725.dida"
     private var statusItem: NSStatusItem?
     private var store: Store?
     private var state: AppState?
@@ -11,8 +12,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var medPopup: MedPopupController?
     private var banner: BannerController?
     private var cancellables = Set<AnyCancellable>()
+    private var lastPopoverCloseAt = Date.distantPast
+    private let myPID = ProcessInfo.processInfo.processIdentifier
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        // 二次启动：已有实例在运行时，让老实例亮相，新实例退出
+        let others = NSRunningApplication.runningApplications(withBundleIdentifier: Self.bundleID)
+            .filter { $0.processIdentifier != myPID }
+        if !others.isEmpty && Bundle.main.bundlePath.hasSuffix(".app") {
+            DistributedNotificationCenter.default().post(
+                name: .init("com.blueDaydreaming725.dida.show"), object: "\(myPID)")
+            exit(0)
+        }
+
         let store = Store()
         let state = AppState(store: store)
         let banner = BannerController()
@@ -51,12 +63,26 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             .store(in: &cancellables)
         updateIcon()
 
-        if !UserDefaults.standard.bool(forKey: "hasLaunchedBefore") {
-            UserDefaults.standard.set(true, forKey: "hasLaunchedBefore")
-            banner.show(title: "滴答已启动",
-                        subtitle: "下次用药 \(clockString(state.nextMed)) · 图标就在菜单栏",
-                        seconds: 8, icon: "drop.fill", tint: Dida.indigo)
-        }
+        // 已有实例收到“新实例启动”通知后亮相
+        DistributedNotificationCenter.default().addObserver(
+            self, selector: #selector(showRunningBanner(_:)),
+            name: .init("com.blueDaydreaming725.dida.show"), object: nil)
+
+        // 每次启动都给可见反馈（无 Dock、无窗口，启动本身必须“看得见”）
+        let firstRun = !UserDefaults.standard.bool(forKey: "hasLaunchedBefore")
+        if firstRun { UserDefaults.standard.set(true, forKey: "hasLaunchedBefore") }
+        banner.show(title: "滴答已启动",
+                    subtitle: firstRun
+                        ? "下次用药 \(clockString(state.nextMed)) · HW 图标就在菜单栏"
+                        : "HW 图标就在菜单栏右上角",
+                    seconds: firstRun ? 8 : 4, icon: "drop.fill", tint: Dida.indigo)
+    }
+
+    @objc private func showRunningBanner(_ notification: Notification) {
+        guard notification.object as? String != "\(myPID)" else { return }
+        banner?.show(title: "滴答已在运行中",
+                     subtitle: "图标就在菜单栏右上角 · 单击 HW 打开面板",
+                     seconds: 5, icon: "drop.fill", tint: Dida.indigo)
     }
 
     // MARK: 菜单栏图标（HW 品牌字母，蓝→紫→粉渐变，状态用颜色区分）
@@ -124,9 +150,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         guard let event = NSApp.currentEvent else { togglePopover(); return }
         if event.type == .rightMouseUp || event.modifierFlags.contains(.control) {
             showMenu()
-        } else {
-            togglePopover()
+            return
         }
+        // 双击只算一次：连点不再出现“开了又关”，面板保持打开
+        if event.type == .leftMouseUp && event.clickCount > 1 { return }
+        togglePopover()
     }
 
     private func showMenu() {
@@ -161,6 +189,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         popover.animates = true
         popover.contentViewController = controller
         popover.contentSize = NSSize(width: 330, height: 360)
+        popover.delegate = self
         self.popover = popover
     }
 
@@ -168,8 +197,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         guard let popover, let button = statusItem?.button else { return }
         if popover.isShown {
             popover.performClose(nil)
-        } else {
-            popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+            return
         }
+        // 刚因点击图标自身被 transient 关闭：这次点击就是“关闭”，不要闪开
+        guard Date().timeIntervalSince(lastPopoverCloseAt) > 0.25 else { return }
+        popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+    }
+}
+
+extension AppDelegate: NSPopoverDelegate {
+    func popoverDidClose(_ notification: Notification) {
+        lastPopoverCloseAt = Date()
     }
 }
