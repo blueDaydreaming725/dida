@@ -1,0 +1,27 @@
+Sources/dida/AppDelegate.swift
+  s_56acfdaaa13f85::t_f6fdb15afa730a 115
+  s_56acfdaaa13f85::t_ae6431cd45a73c 62-67,71-102,104-106
+Sources/dida/Views.swift
+  s_56acfdaaa13f85::t_2e7260eb2797cf 4,9,14-18,20,26-27,30-36
+  s_56acfdaaa13f85::t_b949eb8307f638 28-29
+  s_56acfdaaa13f85::t_77696c3b541789 368-369
+  s_56acfdaaa13f85::t_805a2cf2dba4e1 322-325,327-328
+docs/hero.svg
+  s_56acfdaaa13f85::t_807b7045c8dbd1 1,4-5,7-10,15,17-19,21-27
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.43-trip",
+  "base_commit_sha": "aaf09f41ce51e9d005a5bf42c2476f01664c47c0",
+  "prompts": {},
+  "sessions": {
+    "s_56acfdaaa13f85": {
+      "agent_id": {
+        "tool": "zcode",
+        "id": "sess_188a2e82-08da-44d1-b182-c9867d382674",
+        "model": "GLM-5.3-Flash"
+      },
+      "human_author": "yuxuan.weng <wengyx@trip.com>"
+    }
+  }
+}
