@@ -42,7 +42,7 @@ final class AppState: ObservableObject {
         startTimers()
     }
 
-    var isSuspended: Bool { suspendedUntil != nil }
+    var isSuspended: Bool { suspendKind != nil }
 
     // MARK: 启动
 
@@ -74,14 +74,9 @@ final class AppState: ObservableObject {
     private func tick() {
         let now = Date()
 
-        if let until = suspendedUntil {
-            if now >= until {
-                if suspendKind == .rest {
-                    endRest(early: false)
-                } else {
-                    resume(auto: true)
-                }
-            }
+        if suspendKind == .mute { return } // 会议静音：永不自动恢复
+        if suspendKind == .rest, let until = suspendedUntil {
+            if now >= until { endRest(early: false) }
             return
         }
 
@@ -152,7 +147,7 @@ final class AppState: ObservableObject {
 
     /// 面板里的「休息一下」（开始主动休息）
     func startRest() {
-        if isSuspended && suspendKind == .rest { return }
+        if suspendKind == .rest { return }
         onClosePopup?()
         popupActive = false
         suspendKind = .rest
@@ -185,8 +180,19 @@ final class AppState: ObservableObject {
         if suspendKind == .mute {
             resume(auto: false)
         } else {
-            suspend(minutes: store.muteMinutes, kind: .mute)
+            suspendMute()
         }
+    }
+
+    /// 会议静音：只有手动恢复（⌥⌘M / 面板按钮）
+    private func suspendMute() {
+        onClosePopup?()
+        popupActive = false
+        suspendKind = .mute
+        suspendedUntil = nil
+        onBanner?("已静音，安心开会", "不会自动恢复 · ⌥⌘M 或「恢复提醒」结束", 6,
+                  "moon.zzz.fill", Dida.amber)
+        bumpVisual()
     }
 
     func toggleRest() {
@@ -195,20 +201,6 @@ final class AppState: ObservableObject {
         } else {
             startRest()
         }
-    }
-
-    private func suspend(minutes: Int, kind: SuspendKind) {
-        onClosePopup?()
-        popupActive = false
-        suspendKind = kind
-        suspendedUntil = Date().addingTimeInterval(TimeInterval(minutes * 60))
-        if kind == .rest { restStartedAt = Date() }
-        let hint = kind == .mute ? "⌥⌘M 提前恢复" : "⌥⌘B 提前回来"
-        onBanner?(kind == .mute ? "已静音，安心开会" : "休息中 🌿",
-                  "\(minutes) 分钟后自动恢复 · \(hint)", 6,
-                  kind == .mute ? "moon.zzz.fill" : "leaf.fill",
-                  kind == .mute ? Dida.amber : Dida.blue)
-        bumpVisual()
     }
 
     private func resume(auto: Bool, quiet: Bool = false) {

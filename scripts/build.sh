@@ -17,6 +17,8 @@ cat > "$APP/Contents/Info.plist" <<'PLIST'
 <dict>
     <key>CFBundleExecutable</key>
     <string>dida</string>
+    <key>CFBundleIconFile</key>
+    <string>AppIcon</string>
     <key>CFBundleIdentifier</key>
     <string>com.blueDaydreaming725.dida</string>
     <key>CFBundleName</key>
@@ -26,13 +28,11 @@ cat > "$APP/Contents/Info.plist" <<'PLIST'
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleShortVersionString</key>
-    <string>1.0.1</string>
+    <string>1.0.2</string>
     <key>CFBundleVersion</key>
     <string>1</string>
     <key>LSMinimumSystemVersion</key>
     <string>13.0</string>
-    <key>LSUIElement</key>
-    <true/>
     <key>NSHighResolutionCapable</key>
     <true/>
 </dict>
@@ -40,6 +40,12 @@ cat > "$APP/Contents/Info.plist" <<'PLIST'
 PLIST
 
 printf 'APPL????' > "$APP/Contents/PkgInfo"
+
+# 应用图标: HW 渐变字标 → icns
+ICONSET="$(mktemp -d)/AppIcon.iconset"
+swift scripts/make_icon.swift "$ICONSET"
+iconutil -c icns "$ICONSET" -o "$APP/Contents/Resources/AppIcon.icns"
+
 codesign --force --sign - "$APP" 2>/dev/null || true
 
 # 打包 DMG（拖入 Applications 布局）

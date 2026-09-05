@@ -393,9 +393,7 @@ struct RootPopoverView: View {
         if state.suspendKind == .rest, let until = state.suspendedUntil {
             return "休息中 · \(formatDuration(until.timeIntervalSince(now)))后回来"
         }
-        if state.isSuspended, let until = state.suspendedUntil {
-            return "\(formatDuration(until.timeIntervalSince(now)))后恢复"
-        }
+        if state.suspendKind == .mute { return "已静音 · ⌥⌘M 恢复" }
         guard let target = state.nextMed else { return "--:--" }
         let remaining = target.timeIntervalSince(now)
         if remaining <= 0 { return "马上提醒" }
@@ -576,14 +574,6 @@ struct RootPopoverView: View {
                     .foregroundStyle(.secondary)
                 Spacer()
                 Stepper("\(store.restMinutes) 分钟", value: $store.restMinutes, in: 1...30)
-                    .font(.system(size: 12))
-            }
-            HStack {
-                Text("静音时长")
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(.secondary)
-                Spacer()
-                Stepper("\(store.muteMinutes) 分钟", value: $store.muteMinutes, in: 5...240, step: 5)
                     .font(.system(size: 12))
             }
         }

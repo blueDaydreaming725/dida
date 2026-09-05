@@ -8,7 +8,7 @@ struct DidaApp {
     static func main() {
         let app = NSApplication.shared
         app.delegate = delegate
-        app.setActivationPolicy(.accessory) // 无 Dock 图标
+        app.setActivationPolicy(.regular) // Dock 常驻，无菜单栏图标
         app.run()
     }
 }

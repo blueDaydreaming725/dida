@@ -2,7 +2,7 @@
 
 <img src="docs/hero.svg" alt="滴答 Dida" width="720" />
 
-**菜单栏常驻的眼药水 & 护眼提醒 · 为干眼症与过敏性结膜炎而生**
+**Dock 常驻的眼药水 & 护眼提醒 · 为干眼症与过敏性结膜炎而生**
 
 [![CI](https://github.com/blueDaydreaming725/dida/actions/workflows/ci.yml/badge.svg)](https://github.com/blueDaydreaming725/dida/actions/workflows/ci.yml)
 [![Platform](https://img.shields.io/badge/platform-macOS%2013%2B-black?logo=apple&logoColor=white)](https://github.com/blueDaydreaming725/dida)
@@ -10,7 +10,7 @@
 [![Release](https://img.shields.io/github/v/release/blueDaydreaming725/dida?include_prereleases&color=5A70FA)](https://github.com/blueDaydreaming725/dida/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-A05CF5.svg)](LICENSE)
 
-原生 Swift，无 Dock 图标，无主窗口。1Hz 单计时器 + 事件驱动，常驻内存 ~60MB，空闲 CPU ≈ 0%。
+原生 Swift。无菜单栏图标——面板住在 Dock 里；1Hz 单计时器 + 事件驱动，空闲 CPU ≈ 0%。
 
 </div>
 
@@ -25,7 +25,7 @@
 
 - 💊 **两步用药提醒** —— 到点弹出置顶确认窗：先滴富马 → 等待间隔 → 再弹聚乙二醇 → 本轮完成。不抢键盘焦点，但必须你亲自点「已滴完」。
 - 👀 **20-20-20 护眼** —— 每 20 分钟一条轻量横幅：「看远处 20 秒」，20 秒自动消失。该法则有 2023 年临床研究支持（[文献](https://pubmed.ncbi.nlm.nih.gov/35963776/)）。
-- 🤫 **会议模式** —— `⌥⌘M` 一键静音全部提醒，默认 60 分钟自动恢复，永远不怕忘。
+- 🤫 **会议模式** —— `⌥⌘M` 一键静音全部提醒，永不自动恢复，开会零尴尬。
 
 ## ✨ 特性
 
@@ -45,7 +45,7 @@
 | 快捷键 | 功能 |
 |:---:|---|
 | <kbd>⌥</kbd> <kbd>⌘</kbd> <kbd>B</kbd> | 开始休息 / 提前回来（默认 5 分钟自动回来，面板里可「再休 5 分钟」） |
-| <kbd>⌥</kbd> <kbd>⌘</kbd> <kbd>M</kbd> | 静音所有提醒 / 恢复（会议模式，默认 60 分钟自动恢复） |
+| <kbd>⌥</kbd> <kbd>⌘</kbd> <kbd>M</kbd> | 静音所有提醒 / 恢复（会议模式，**手动恢复**） |
 
 ## 📦 安装
 
@@ -71,11 +71,13 @@ cd dida
 open dist/Dida.app
 ```
 
-首次启动会在菜单栏出现眼睛图标：**左键**面板（倒计时/操作/设置），**右键**快捷菜单。
+首次启动会自动打开面板，Dock 常驻 HW 图标：**单击 Dock 图标**随时打开面板（关窗后提醒继续）。
+
+![图标](docs/hero.svg)
 
 ## ⚙️ 配置
 
-所有设置都在菜单栏面板的「设置」区，持久化于 `UserDefaults`：
+所有设置都在面板窗口的「设置」区，持久化于 `UserDefaults`：
 
 | 配置项 | 默认值 | 范围 | 说明 |
 |---|:---:|:---:|---|
@@ -83,7 +85,6 @@ open dist/Dida.app
 | 两药间隔 | 5 分钟 | 1–30 分钟 | 滴完富马到聚乙二醇的等待 |
 | 护眼提醒间隔 | 每 20 分钟 | 5–60 分钟 | 20-20-20 法则的"20 分钟" |
 | 休息时长 | 5 分钟 | 1–30 分钟 | ⌥⌘B 主动休息的自动恢复时间 |
-| 静音时长 | 60 分钟 | 5–240 分钟 | ⌥⌘M 会议模式的自动恢复时间 |
 | 药名 | 富马 / 聚乙二醇 | 自由文本 | 换成你的药，给别人用也成立 |
 | 提醒音效 | 开 | 开/关 | 用药弹窗的 Glass 提示音 |
 | 登录时启动 | 关 | 开/关 | LaunchAgent 自启动 |
@@ -121,7 +122,7 @@ dida/
 <details>
 <summary>到点了没弹提醒？</summary>
 
-检查菜单栏图标：显示 👁 才在提醒中，`eye.slash` 表示已静音（⌥⌘M 可恢复）。另外确认系统时间与用药时间点设置。
+点 Dock 图标打开面板看状态徽标（提醒中/已静音/休息中）；已静音时 ⌥⌘M 恢复。另外确认系统时间与用药时间点设置。
 </details>
 
 <details>

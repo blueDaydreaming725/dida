@@ -12,7 +12,6 @@ final class Store: ObservableObject {
     @Published var gapMinutes: Int { didSet { d.set(gapMinutes, forKey: "gapMinutes") } }
     @Published var workIntervalMinutes: Int { didSet { d.set(workIntervalMinutes, forKey: "workIntervalMinutes") } }
     @Published var restMinutes: Int { didSet { d.set(restMinutes, forKey: "restMinutes") } }
-    @Published var muteMinutes: Int { didSet { d.set(muteMinutes, forKey: "muteMinutes") } }
     @Published var launchAtLogin: Bool { didSet { LoginItem.set(launchAtLogin) } }
     @Published var playSound: Bool { didSet { d.set(playSound, forKey: "playSound") } }
 
@@ -24,7 +23,6 @@ final class Store: ObservableObject {
             "gapMinutes": 5,
             "workIntervalMinutes": 20,
             "restMinutes": 5,
-            "muteMinutes": 60,
             "playSound": true,
         ])
 
@@ -39,7 +37,6 @@ final class Store: ObservableObject {
         gapMinutes = max(1, d.integer(forKey: "gapMinutes"))
         workIntervalMinutes = min(60, max(5, d.integer(forKey: "workIntervalMinutes")))
         restMinutes = min(30, max(1, d.integer(forKey: "restMinutes")))
-        muteMinutes = min(240, max(5, d.integer(forKey: "muteMinutes")))
         playSound = d.object(forKey: "playSound") == nil ? true : d.bool(forKey: "playSound")
         launchAtLogin = LoginItem.isEnabled()
     }
