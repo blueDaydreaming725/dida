@@ -304,7 +304,7 @@ struct RootPopoverView: View {
         HStack {
             ZStack {
                 Circle().fill(Dida.action).frame(width: 24, height: 24)
-                Image(systemName: "eye")
+                Image(systemName: "drop.fill")
                     .font(.system(size: 12, weight: .semibold))
                     .foregroundStyle(.white)
             }

@@ -55,7 +55,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             UserDefaults.standard.set(true, forKey: "hasLaunchedBefore")
             banner.show(title: "滴答已启动",
                         subtitle: "下次用药 \(clockString(state.nextMed)) · 图标就在菜单栏",
-                        seconds: 8, icon: "eye", tint: Dida.indigo)
+                        seconds: 8, icon: "drop.fill", tint: Dida.indigo)
         }
     }
 
@@ -63,10 +63,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func statusImage() -> NSImage? {
         let name: String
-        switch (state?.popupActive, state?.isSuspended) {
-        case (true, _): name = "drop.fill"
-        case (_, true): name = "eye.slash"
-        default: name = "eye"
+        switch (state?.popupActive, state?.suspendKind) {
+        case (true, _): name = "eyedropper" // 弹窗等待确认中
+        case (_, .rest): name = "leaf.fill" // 休息中
+        case (_, .mute): name = "moon.zzz.fill" // 静音中
+        default: name = "drop.fill" // 正常提醒
         }
         let image = NSImage(systemSymbolName: name, accessibilityDescription: "滴答 · 用药与护眼提醒")
         image?.size = NSSize(width: 18, height: 18)
