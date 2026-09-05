@@ -468,32 +468,56 @@ struct RootPopoverView: View {
     // MARK: 设置
 
     private var settings: some View {
-        DisclosureGroup(isExpanded: $showSettings) {
-            VStack(alignment: .leading, spacing: 12) {
-                timesEditor
-                gapsAndNames
-                intervals
-                TogglesRow(store: store)
+        VStack(alignment: .leading, spacing: 12) {
+            Button {
+                withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
+                    showSettings.toggle()
+                }
+            } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 11, weight: .heavy))
+                        .foregroundStyle(Dida.indigo)
+                        .rotationEffect(.degrees(showSettings ? 90 : 0))
+                    Text("设置")
+                        .font(.system(size: 13, weight: .semibold))
+                    Spacer()
+                }
+                .contentShape(Rectangle())
             }
-            .padding(.top, 10)
-        } label: {
-            Text("设置")
-                .font(.system(size: 13, weight: .semibold))
+            .buttonStyle(.plain)
+
+            if showSettings {
+                VStack(alignment: .leading, spacing: 16) {
+                    timesEditor
+                    settingDivider
+                    gapsAndNames
+                    settingDivider
+                    intervals
+                    settingDivider
+                    TogglesRow(store: store)
+                }
+                .transition(.opacity)
+            }
         }
-        .font(.system(size: 12))
+    }
+
+    private var settingDivider: some View {
+        Divider().overlay(Color.primary.opacity(0.06))
     }
 
     private var timesEditor: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Text("用药时间")
-                    .font(.system(size: 12, weight: .medium))
+                    .font(.system(size: 12, weight: .semibold))
                     .foregroundStyle(.secondary)
                 Spacer()
                 Button {
                     withAnimation { store.medTimes.append(MedTime(hour: 12, minute: 0)) }
                 } label: {
-                    Image(systemName: "plus.circle")
+                    Image(systemName: "plus.circle.fill")
+                        .font(.system(size: 14))
                 }
                 .buttonStyle(.plain)
                 .foregroundStyle(Dida.indigo)
@@ -501,29 +525,21 @@ struct RootPopoverView: View {
             }
             ForEach($store.medTimes) { $time in
                 HStack {
-                    DatePicker("", selection: Binding(
-                        get: {
-                            Calendar.current.date(bySettingHour: time.hour,
-                                                  minute: time.minute, second: 0,
-                                                  of: Date()) ?? Date()
-                        },
-                        set: { date in
-                            let comps = Calendar.current.dateComponents([.hour, .minute], from: date)
-                            time = MedTime(id: time.id,
-                                           hour: comps.hour ?? 0,
-                                           minute: comps.minute ?? 0)
-                        }
-                    ), displayedComponents: .hourAndMinute)
-                    .labelsHidden()
-                    .datePickerStyle(.compact)
-                    .fixedSize()
+                    DatePicker("", selection: timeBinding($time), displayedComponents: .hourAndMinute)
+                        .labelsHidden()
+                        .datePickerStyle(.compact)
+                        .fixedSize()
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
+                        .background(Capsule().fill(Color.primary.opacity(0.07)))
 
                     Spacer()
 
                     Button {
                         withAnimation { store.medTimes.removeAll { $0.id == time.id } }
                     } label: {
-                        Image(systemName: "minus.circle")
+                        Image(systemName: "minus.circle.fill")
+                            .font(.system(size: 14))
                     }
                     .buttonStyle(.plain)
                     .foregroundStyle(.secondary)
@@ -533,16 +549,24 @@ struct RootPopoverView: View {
         }
     }
 
+    private func timeBinding(_ time: Binding<MedTime>) -> Binding<Date> {
+        Binding<Date>(
+            get: {
+                Calendar.current.date(bySettingHour: time.wrappedValue.hour,
+                                      minute: time.wrappedValue.minute, second: 0,
+                                      of: Date()) ?? Date()
+            },
+            set: { date in
+                let comps = Calendar.current.dateComponents([.hour, .minute], from: date)
+                time.wrappedValue = MedTime(id: time.wrappedValue.id,
+                                            hour: comps.hour ?? 0,
+                                            minute: comps.minute ?? 0)
+            })
+    }
+
     private var gapsAndNames: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Text("两药间隔")
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(.secondary)
-                Spacer()
-                Stepper("\(store.gapMinutes) 分钟", value: $store.gapMinutes, in: 1...30)
-                    .font(.system(size: 12))
-            }
+        VStack(alignment: .leading, spacing: 10) {
+            ValueStepper(title: "两药间隔", value: $store.gapMinutes, range: 1...30)
             HStack(spacing: 8) {
                 Text("药名")
                     .font(.system(size: 12, weight: .medium))
@@ -550,32 +574,20 @@ struct RootPopoverView: View {
                 TextField("先滴", text: $store.med1Name)
                     .textFieldStyle(.roundedBorder)
                     .font(.system(size: 12))
+                    .tint(Dida.indigo)
                 TextField("后滴", text: $store.med2Name)
                     .textFieldStyle(.roundedBorder)
                     .font(.system(size: 12))
+                    .tint(Dida.indigo)
             }
         }
     }
 
     private var intervals: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Text("护眼提醒")
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(.secondary)
-                Spacer()
-                Stepper("每 \(store.workIntervalMinutes) 分钟",
-                        value: $store.workIntervalMinutes, in: 5...60, step: 5)
-                    .font(.system(size: 12))
-            }
-            HStack {
-                Text("休息时长")
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(.secondary)
-                Spacer()
-                Stepper("\(store.restMinutes) 分钟", value: $store.restMinutes, in: 1...30)
-                    .font(.system(size: 12))
-            }
+        VStack(alignment: .leading, spacing: 10) {
+            ValueStepper(title: "护眼提醒", value: $store.workIntervalMinutes, range: 5...60, step: 5,
+                         display: { "每 \($0) 分钟" })
+            ValueStepper(title: "休息时长", value: $store.restMinutes, range: 1...30)
         }
     }
 
@@ -583,7 +595,7 @@ struct RootPopoverView: View {
 
     private var footer: some View {
         HStack {
-            Text("⌥⌘B 休息 · ⌥⌘M 静音")
+            Text("⌥⌘P 面板 · ⌥⌘B 休息 · ⌥⌘M 静音")
                 .font(.system(size: 11))
                 .foregroundStyle(.secondary)
             Spacer()
@@ -602,10 +614,54 @@ private struct TogglesRow: View {
         VStack(alignment: .leading, spacing: 6) {
             Toggle("用药提醒音效", isOn: $store.playSound)
                 .font(.system(size: 12))
+            Toggle("显示菜单栏图标（⌥⌘P 唤出面板）", isOn: $store.showMenuBarIcon)
+                .font(.system(size: 12))
             if LoginItem.available {
                 Toggle("登录时启动", isOn: $store.launchAtLogin)
                     .font(.system(size: 12))
             }
         }
+    }
+}
+
+// MARK: - 品牌化数值步进器（替换系统 Stepper）
+
+struct ValueStepper: View {
+    let title: String
+    @Binding var value: Int
+    var range: ClosedRange<Int>
+    var step: Int = 1
+    var display: (Int) -> String = { "\($0) 分钟" }
+
+    var body: some View {
+        HStack {
+            Text(title)
+                .font(.system(size: 12, weight: .medium))
+                .foregroundStyle(.secondary)
+            Spacer()
+            HStack(spacing: 2) {
+                stepButton(symbol: "minus", delta: -step, enabled: value - step >= range.lowerBound)
+                Text(display(value))
+                    .font(.system(size: 12, weight: .semibold, design: .rounded))
+                    .monospacedDigit()
+                    .frame(minWidth: 66)
+                stepButton(symbol: "plus", delta: step, enabled: value + step <= range.upperBound)
+            }
+            .background(Capsule().fill(Color.primary.opacity(0.07)))
+        }
+    }
+
+    private func stepButton(symbol: String, delta: Int, enabled: Bool) -> some View {
+        Button {
+            value = min(max(value + delta, range.lowerBound), range.upperBound)
+        } label: {
+            Image(systemName: symbol)
+                .font(.system(size: 9, weight: .heavy))
+                .foregroundStyle(enabled ? Dida.indigo : Color.primary.opacity(0.25))
+                .frame(width: 28, height: 24)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .disabled(!enabled)
     }
 }

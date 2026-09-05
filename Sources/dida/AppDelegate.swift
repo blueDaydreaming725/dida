@@ -11,6 +11,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var banner: BannerController?
     private var cancellables = Set<AnyCancellable>()
     private var mainWindow: NSWindow?
+    private var statusItem: NSStatusItem? // 可选：设置里开启
     private let myPID = ProcessInfo.processInfo.processIdentifier
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -50,7 +51,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         self.medPopup = medPopup
 
         HotKeys.install(mute: { [weak state] in state?.toggleMute() },
-                        rest: { [weak state] in state?.toggleRest() })
+                        rest: { [weak state] in state?.toggleRest() },
+                        panel: { [weak self] in self?.toggleMainWindow() })
+
+        // 菜单栏图标开关
+        updateMenuBarIcon()
+        store.$showMenuBarIcon
+            .dropFirst()
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in self?.updateMenuBarIcon() }
+            .store(in: &cancellables)
 
         DistributedNotificationCenter.default().addObserver(
             self, selector: #selector(handleShowNotification(_:)),
@@ -61,8 +71,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if firstRun { UserDefaults.standard.set(true, forKey: "hasLaunchedBefore") }
         banner.show(title: "滴答已启动",
                     subtitle: firstRun
-                        ? "下次用药 \(clockString(state.nextMed)) · 点 Dock 图标打开面板"
-                        : "点 Dock 图标打开面板",
+                        ? "下次用药 \(clockString(state.nextMed)) · ⌥⌘P 或点 Dock 图标打开面板"
+                        : "⌥⌘P 或点 Dock 图标打开面板",
                     seconds: firstRun ? 8 : 4, icon: "drop.fill", tint: Dida.indigo)
         if firstRun {
             showMainWindow()
@@ -87,20 +97,26 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         false // 关窗后提醒继续
     }
 
+    func toggleMainWindow() {
+        if let window = mainWindow, window.isVisible, window.isKeyWindow {
+            window.performClose(nil)
+        } else {
+            showMainWindow()
+        }
+    }
+
     @objc private func showMainWindow() {
         if mainWindow == nil {
             guard let store, let state else { return }
             let controller = NSHostingController(
                 rootView: ScrollView {
                     RootPopoverView()
-                        .padding(.top, 24) // 给透明标题栏的通行灯留位
+                        .padding(.top, 44) // 透明标题栏 + 通行灯
                 }
                 .frame(width: 330)
                 .scrollIndicators(.hidden)
                 .environmentObject(store)
                 .environmentObject(state))
-            // 不用 preferredContentSize 驱动窗口——它会在显示周期里
-            // 反向改约束触发 NSException（macOS 26 实测崩溃），改为显式量尺寸
             controller.sizingOptions = []
             let fitting = controller.view.fittingSize
             let width = max(330, fitting.width)
@@ -116,14 +132,79 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             window.isOpaque = false
             window.backgroundColor = .clear
             window.isReleasedWhenClosed = false
-            window.contentView = controller.view
-            window.contentView?.wantsLayer = true
-            window.contentView?.layer?.cornerRadius = 16
-            window.contentView?.layer?.masksToBounds = true
+
+            // 容器层裁出四角大圆角（系统窗口自带圆角太小）
+            let container = NSView(frame: NSRect(x: 0, y: 0, width: width, height: height))
+            container.wantsLayer = true
+            container.layer?.cornerRadius = 22
+            container.layer?.masksToBounds = true
+            controller.view.frame = container.bounds
+            controller.view.autoresizingMask = [.width, .height]
+            container.addSubview(controller.view)
+            window.contentView = container
             window.center()
             mainWindow = window
         }
         mainWindow?.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
+    }
+
+    // MARK: 菜单栏图标（可选，模板渲染）
+
+    private func updateMenuBarIcon() {
+        guard let store else { return }
+        if store.showMenuBarIcon {
+            if statusItem == nil {
+                let item = NSStatusBar.system.statusItem(withLength: 36)
+                item.button?.image = statusImage()
+                item.button?.target = self
+                item.button?.action = #selector(statusClicked)
+                item.button?.sendAction(on: [.leftMouseUp, .rightMouseUp])
+                statusItem = item
+            }
+        } else if let item = statusItem {
+            NSStatusBar.system.removeStatusItem(item)
+            statusItem = nil
+        }
+    }
+
+    private func statusImage() -> NSImage? {
+        // Liquid Glass 菜单栏只渲染 template 图（黑 + alpha）
+        switch (state?.popupActive, state?.suspendKind) {
+        case (true, _):
+            return NSImage(systemSymbolName: "eyedropper", accessibilityDescription: Self.iconTip)
+        case (_, .rest):
+            return NSImage(systemSymbolName: "leaf.fill", accessibilityDescription: Self.iconTip)
+        case (_, .mute):
+            return NSImage(systemSymbolName: "moon.zzz.fill", accessibilityDescription: Self.iconTip)
+        default:
+            return Self.hwTemplateIcon()
+        }
+    }
+
+    private static let iconTip = "滴答 · 用药与护眼提醒（HW）"
+
+    private static func hwTemplateIcon() -> NSImage {
+        let text = "HW"
+        let attrs: [NSAttributedString.Key: Any] = [
+            .font: NSFont.systemFont(ofSize: 15, weight: .heavy),
+            .kern: CGFloat(-0.6),
+            .foregroundColor: NSColor.black,
+        ]
+        let textSize = (text as NSString).size(withAttributes: attrs)
+        let width = ceil(textSize.width) + 2
+        let height = ceil(textSize.height) + 1
+        let image = NSImage(size: NSSize(width: width, height: height), flipped: false) { _ in
+            (text as NSString).draw(at: NSPoint(x: 1, y: 0), withAttributes: attrs)
+            return true
+        }
+        image.isTemplate = true
+        return image
+    }
+
+    @objc private func statusClicked() {
+        guard let event = NSApp.currentEvent else { toggleMainWindow(); return }
+        if event.type == .leftMouseUp && event.clickCount > 1 { return }
+        toggleMainWindow()
     }
 }

@@ -14,6 +14,7 @@ final class Store: ObservableObject {
     @Published var restMinutes: Int { didSet { d.set(restMinutes, forKey: "restMinutes") } }
     @Published var launchAtLogin: Bool { didSet { LoginItem.set(launchAtLogin) } }
     @Published var playSound: Bool { didSet { d.set(playSound, forKey: "playSound") } }
+    @Published var showMenuBarIcon: Bool { didSet { d.set(showMenuBarIcon, forKey: "showMenuBarIcon") } }
 
     init(defaults: UserDefaults = .standard) {
         d = defaults
@@ -24,6 +25,7 @@ final class Store: ObservableObject {
             "workIntervalMinutes": 20,
             "restMinutes": 5,
             "playSound": true,
+            "showMenuBarIcon": false,
         ])
 
         if let data = d.data(forKey: "medTimesData"),
@@ -38,6 +40,7 @@ final class Store: ObservableObject {
         workIntervalMinutes = min(60, max(5, d.integer(forKey: "workIntervalMinutes")))
         restMinutes = min(30, max(1, d.integer(forKey: "restMinutes")))
         playSound = d.object(forKey: "playSound") == nil ? true : d.bool(forKey: "playSound")
+        showMenuBarIcon = d.object(forKey: "showMenuBarIcon") == nil ? false : d.bool(forKey: "showMenuBarIcon")
         launchAtLogin = LoginItem.isEnabled()
     }
 

@@ -1,20 +1,24 @@
 import Foundation
 import Carbon.HIToolbox
 
-/// Carbon 全局热键，无需辅助功能权限。快捷键固定：⌥⌘M 静音、⌥⌘B 休息。
+/// Carbon 全局热键，无需辅助功能权限。
+/// ⌥⌘M 静音 · ⌥⌘B 休息 · ⌥⌘P 面板
 @MainActor
 final class HotKeys {
     private static var callbacks: [UInt32: () -> Void] = [:]
     private static var refs: [EventHotKeyRef?] = []
     private static var handlerInstalled = false
 
-    static func install(mute: @escaping () -> Void, rest: @escaping () -> Void) {
+    static func install(mute: @escaping () -> Void,
+                        rest: @escaping () -> Void,
+                        panel: @escaping () -> Void) {
         callbacks[1] = mute
         callbacks[2] = rest
+        callbacks[3] = panel
         installHandlerIfNeeded()
         let signature = fourCC("dida")
-        // kVK_ANSI_M = 46, kVK_ANSI_B = 11；cmdKey = 1<<8, optionKey = 1<<11
-        for (id, keyCode) in [(UInt32(1), UInt32(46)), (UInt32(2), UInt32(11))] {
+        // kVK_ANSI_M = 46, kVK_ANSI_B = 11, kVK_ANSI_P = 35；cmdKey = 1<<8, optionKey = 1<<11
+        for (id, keyCode) in [(UInt32(1), UInt32(46)), (UInt32(2), UInt32(11)), (UInt32(3), UInt32(35))] {
             var ref: EventHotKeyRef?
             let status = RegisterEventHotKey(keyCode,
                                              UInt32(cmdKey | optionKey),
