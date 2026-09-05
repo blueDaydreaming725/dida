@@ -1,0 +1,19 @@
+Sources/dida/Views.swift
+  s_56acfdaaa13f85::t_d8e3bcb3413bbb 4,6-12,14-16,21-42,83-96,108,117-120,151,159-160,168,172,175-178,183,195,204-207,235-238,250-251,265,268-271,306,309,320,322,331,346,349,353-356,364-370,399,406,428,451,488
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.43-trip",
+  "base_commit_sha": "2f6980d3287e6d75680b3e33b16e7480a79f4260",
+  "prompts": {},
+  "sessions": {
+    "s_56acfdaaa13f85": {
+      "agent_id": {
+        "tool": "zcode",
+        "id": "sess_188a2e82-08da-44d1-b182-c9867d382674",
+        "model": "GLM-5.3-Flash"
+      },
+      "human_author": "yuxuan.weng <wengyx@trip.com>"
+    }
+  }
+}
