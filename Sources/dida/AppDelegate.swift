@@ -59,18 +59,51 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    // MARK: 菜单栏图标
+    // MARK: 菜单栏图标（HW 品牌字母，蓝→紫→粉渐变，状态用颜色区分）
+
+    private enum IconStyle {
+        case brand
+        case solid(NSColor)
+    }
 
     private func statusImage() -> NSImage? {
-        let name: String
         switch (state?.popupActive, state?.suspendKind) {
-        case (true, _): name = "eyedropper" // 弹窗等待确认中
-        case (_, .rest): name = "leaf.fill" // 休息中
-        case (_, .mute): name = "moon.zzz.fill" // 静音中
-        default: name = "drop.fill" // 正常提醒
+        case (true, _): return Self.letterIcon(style: .brand) // 弹窗等待确认中
+        case (_, .rest): return Self.letterIcon(style: .solid(Dida.blue.nsColor)) // 休息中
+        case (_, .mute): return Self.letterIcon(style: .solid(.systemGray)) // 静音中
+        default: return Self.letterIcon(style: .brand) // 正常提醒
         }
-        let image = NSImage(systemSymbolName: name, accessibilityDescription: "滴答 · 用药与护眼提醒")
-        image?.size = NSSize(width: 18, height: 18)
+    }
+
+    /// 把大写字母描成渐变色标（sourceAtop 只染到字上，类似 AGENT TEAM 风格）
+    private static func letterIcon(style: IconStyle) -> NSImage? {
+        let text = "HW"
+        let attrs: [NSAttributedString.Key: Any] = [
+            .font: NSFont.systemFont(ofSize: 14, weight: .heavy),
+            .kern: CGFloat(-0.6),
+        ]
+        let textSize = (text as NSString).size(withAttributes: attrs)
+        let width = ceil(textSize.width) + 2
+        let height = ceil(textSize.height)
+
+        let image = NSImage(size: NSSize(width: width, height: height))
+        image.lockFocus()
+        (text as NSString).draw(at: NSPoint(x: 1, y: 0), withAttributes: attrs)
+        NSGraphicsContext.current?.compositingOperation = .sourceAtop
+        switch style {
+        case .brand:
+            NSGradient(colors: [
+                NSColor(red: 0.23, green: 0.51, blue: 0.96, alpha: 1),
+                NSColor(red: 0.66, green: 0.33, blue: 0.96, alpha: 1),
+                NSColor(red: 0.93, green: 0.28, blue: 0.60, alpha: 1),
+            ])?.draw(in: NSRect(x: 0, y: 0, width: width, height: height), angle: -65)
+        case .solid(let color):
+            color.setFill()
+            NSRect(x: 0, y: 0, width: width, height: height).fill()
+        }
+        NSGraphicsContext.current?.compositingOperation = .sourceOver
+        image.unlockFocus()
+        image.isTemplate = false
         return image
     }
 
@@ -79,9 +112,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func setupStatusItem() {
-        let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
+        let item = NSStatusBar.system.statusItem(withLength: 36)
         item.button?.image = statusImage()
-        item.button?.image?.size = NSSize(width: 18, height: 18)
         item.button?.target = self
         item.button?.action = #selector(statusClicked)
         item.button?.sendAction(on: [.leftMouseUp, .rightMouseUp])

@@ -1,21 +1,39 @@
 import SwiftUI
 import AppKit
 
-// MARK: - 配色「蓝紫渐变」：蓝 = 富马/休息/平静，紫 = 聚乙二醇，蓝→紫渐变 = 主行动
+// MARK: - 配色「蓝紫粉渐变」：重磅字母品牌色，蓝 = 富马/休息，紫 = 聚乙二醇，粉收尾
 enum Dida {
     /// 行动蓝（滴药第 1 步 / 提醒中）
     static let indigo = Color(red: 0.35, green: 0.44, blue: 0.98)
     /// 紫（滴药第 2 步）
-    static let violet = Color(red: 0.63, green: 0.36, blue: 0.96)
+    static let violet = Color(red: 0.66, green: 0.33, blue: 0.96)
     /// 休息蓝
     static let blue = Color(red: 0.25, green: 0.60, blue: 0.98)
     /// 静音琥珀
     static let amber = Color(red: 0.95, green: 0.62, blue: 0.10)
+    /// 品牌粉（渐变收尾）
+    static let pink = Color(red: 0.93, green: 0.28, blue: 0.60)
+    /// 品牌渐变：蓝 → 紫 → 粉
+    static let brand = LinearGradient(colors: [Color(red: 0.23, green: 0.51, blue: 0.96), violet, pink],
+                                      startPoint: .leading, endPoint: .trailing)
     /// 主行动渐变
-    static let action = LinearGradient(colors: [indigo, violet],
+    static let action = LinearGradient(colors: [Color(red: 0.23, green: 0.51, blue: 0.96), violet],
                                        startPoint: .topLeading, endPoint: .bottomTrailing)
     /// 玻璃 1px 描边
     static let hairline = Color.primary.opacity(0.10)
+}
+
+extension Color {
+    var nsColor: NSColor {
+        let c = components()
+        return NSColor(srgbRed: c.red, green: c.green, blue: c.blue, alpha: c.opacity)
+    }
+
+    private func components() -> (red: CGFloat, green: CGFloat, blue: CGFloat, opacity: CGFloat) {
+        var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
+        NSColor(self).getRed(&r, green: &g, blue: &b, alpha: &a)
+        return (r, g, b, a)
+    }
 }
 
 // MARK: - 渐变主按钮
@@ -301,15 +319,13 @@ struct RootPopoverView: View {
     // MARK: 头部
 
     private var header: some View {
-        HStack {
-            ZStack {
-                Circle().fill(Dida.action).frame(width: 24, height: 24)
-                Image(systemName: "drop.fill")
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(.white)
-            }
+        HStack(spacing: 8) {
+            Text("HW")
+                .font(.system(size: 18, weight: .heavy, design: .rounded))
+                .foregroundStyle(Dida.brand)
             Text("滴答")
-                .font(.system(size: 15, weight: .bold))
+                .font(.system(size: 12, weight: .medium))
+                .foregroundStyle(.secondary)
             Spacer()
             statusPill
         }
@@ -349,11 +365,8 @@ struct RootPopoverView: View {
                         .background(Capsule().fill(Dida.indigo.opacity(0.12)))
                 }
                 Text(countdownMed(now: context.date))
-                    .font(.system(size: 25, weight: .semibold, design: .rounded))
-                    .foregroundStyle(
-                        LinearGradient(colors: [Dida.indigo, Dida.violet],
-                                       startPoint: .leading, endPoint: .trailing)
-                    )
+                    .font(.system(size: 25, weight: .heavy, design: .rounded))
+                    .foregroundStyle(Dida.brand)
                     .monospacedDigit()
                 Text(subMed)
                     .font(.system(size: 12))
