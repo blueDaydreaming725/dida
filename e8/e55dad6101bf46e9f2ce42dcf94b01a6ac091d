@@ -1,0 +1,21 @@
+Sources/dida/HotKeys.swift
+  s_56acfdaaa13f85::t_d5756498be4e27 4-5,12-14,17,20-21
+Sources/dida/AppDelegate.swift
+  s_56acfdaaa13f85::t_ec6370a1c0085b 14,54-63,74-75,100-107,114,135-144,151-208
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.43-trip",
+  "base_commit_sha": "e8e55dad6101bf46e9f2ce42dcf94b01a6ac091d",
+  "prompts": {},
+  "sessions": {
+    "s_56acfdaaa13f85": {
+      "agent_id": {
+        "tool": "zcode",
+        "id": "sess_188a2e82-08da-44d1-b182-c9867d382674",
+        "model": "GLM-5.3-Flash"
+      },
+      "human_author": "yuxuan.weng <wengyx@trip.com>"
+    }
+  }
+}
