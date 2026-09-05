@@ -311,7 +311,6 @@ struct RootPopoverView: View {
         }
         .padding(14)
         .frame(width: 330)
-        .background(.ultraThinMaterial)
         .onChange(of: store.medTimes) { _ in state.medTimesChanged() }
         .onChange(of: store.workIntervalMinutes) { _ in state.workIntervalChanged() }
     }
@@ -525,16 +524,8 @@ struct RootPopoverView: View {
             }
             ForEach($store.medTimes) { $time in
                 HStack {
-                    DatePicker("", selection: timeBinding($time), displayedComponents: .hourAndMinute)
-                        .labelsHidden()
-                        .datePickerStyle(.compact)
-                        .fixedSize()
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 3)
-                        .background(Capsule().fill(Color.primary.opacity(0.07)))
-
+                    TimeField(time: $time)
                     Spacer()
-
                     Button {
                         withAnimation { store.medTimes.removeAll { $0.id == time.id } }
                     } label: {
@@ -547,21 +538,6 @@ struct RootPopoverView: View {
                 }
             }
         }
-    }
-
-    private func timeBinding(_ time: Binding<MedTime>) -> Binding<Date> {
-        Binding<Date>(
-            get: {
-                Calendar.current.date(bySettingHour: time.wrappedValue.hour,
-                                      minute: time.wrappedValue.minute, second: 0,
-                                      of: Date()) ?? Date()
-            },
-            set: { date in
-                let comps = Calendar.current.dateComponents([.hour, .minute], from: date)
-                time.wrappedValue = MedTime(id: time.wrappedValue.id,
-                                            hour: comps.hour ?? 0,
-                                            minute: comps.minute ?? 0)
-            })
     }
 
     private var gapsAndNames: some View {
@@ -663,5 +639,58 @@ struct ValueStepper: View {
         }
         .buttonStyle(.plain)
         .disabled(!enabled)
+    }
+}
+
+// MARK: - 手输时间芯片（无系统控件，品牌样式）
+
+struct TimeField: View {
+    @Binding var time: MedTime
+    @State private var hourText = ""
+    @State private var minuteText = ""
+    @FocusState private var focusedField: Int?
+
+    var body: some View {
+        HStack(spacing: 1) {
+            digitField($hourText, tag: 0)
+            Text(":")
+                .font(.system(size: 14, weight: .semibold, design: .rounded))
+                .foregroundStyle(.secondary)
+            digitField($minuteText, tag: 1)
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 4)
+        .background(Capsule().fill(Color.primary.opacity(0.07)))
+        .onAppear(perform: sync)
+        .onChange(of: time) { _ in sync() }
+        .onChange(of: focusedField) { _ in commit() }
+    }
+
+    private func digitField(_ text: Binding<String>, tag: Int) -> some View {
+        TextField("", text: text)
+            .textFieldStyle(.plain)
+            .multilineTextAlignment(.center)
+            .font(.system(size: 15, weight: .semibold, design: .rounded))
+            .foregroundStyle(.primary)
+            .frame(width: 24)
+            .focused($focusedField, equals: tag)
+            .onSubmit { commit() }
+            .onChange(of: text.wrappedValue) { newValue in
+                let digits = String(newValue.filter { $0.isNumber }.prefix(2))
+                if digits != newValue { text.wrappedValue = digits }
+            }
+    }
+
+    private func commit() {
+        let hour = min(23, max(0, Int(hourText) ?? time.hour))
+        let minute = min(59, max(0, Int(minuteText) ?? time.minute))
+        let newTime = MedTime(id: time.id, hour: hour, minute: minute)
+        if newTime != time { time = newTime }
+        sync()
+    }
+
+    private func sync() {
+        hourText = String(format: "%02d", time.hour)
+        minuteText = String(format: "%02d", time.minute)
     }
 }

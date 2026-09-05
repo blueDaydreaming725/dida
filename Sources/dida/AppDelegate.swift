@@ -115,6 +115,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 }
                 .frame(width: 330)
                 .scrollIndicators(.hidden)
+                // 毛玻璃固定在窗口层：滚动只动内容，不会露出桌面
+                .background(.ultraThinMaterial)
                 .environmentObject(store)
                 .environmentObject(state))
             controller.sizingOptions = []
