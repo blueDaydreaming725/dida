@@ -111,7 +111,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             let controller = NSHostingController(
                 rootView: ScrollView {
                     RootPopoverView()
-                        .padding(.top, 44) // 透明标题栏 + 通行灯
+                        .padding(.top, 10) // 安全区已避开标题栏，这里只留通行灯间距
                 }
                 .frame(width: 330)
                 .scrollIndicators(.hidden)
