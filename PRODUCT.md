@@ -9,7 +9,7 @@ macos（原生 Dock 常驻应用，非 web、非 iOS；曾做菜单栏 agent，�
 ## Stack
 
 Swift + AppKit（主线程状态机、NSWindow 面板、NSPanel 弹窗）+ SwiftUI（界面内容）。
-Swift Package Manager 构建，脚本组装 .app（Dock 常驻 + HW 渐变 icns 图标），ad-hoc 签名。
+Swift Package Manager 构建，脚本组装 .app（Dock 常驻 + HY 渐变 icns 图标），ad-hoc 签名。
 委托决策：用户要求"性能极致、秒开秒关"，选择无依赖的原生 Swift 而非 Electron/Tauri。
 
 ## Users
@@ -44,7 +44,7 @@ Swift Package Manager 构建，脚本组装 .app（Dock 常驻 + HW 渐变 icns 
 - 护眼休息提醒：默认每 20 分钟（15–60 可调），轻量横幅 20 秒自动消失。
 - 全局快捷键：⌥⌘M 静音/恢复、⌥⌘B 休息/回来（Carbon RegisterEventHotKey，无需辅助功能权限）。
 - 会议静音为纯手动恢复（用户明确要求），休息保留自动恢复。
-- 入口：Dock 图标 + 面板窗口；App 图标为 HW 渐变字标（构建脚本渲染 icns）。
+- 入口：Dock 图标 + 面板窗口；App 图标为 HY 渐变字标（构建脚本渲染 icns）。
 - 休息交互原则：休息是用户的，应用只记账不评判——随时可提前结束（再按 ⌥⌘B），
   结束时只报告实际休息时长并肯定短休的价值（"闭眼眨眼也有效"），绝不显示"未完成"；
   想延长可在面板点「再休 5 分钟」。主动休息默认 5 分钟（1–30 可调），

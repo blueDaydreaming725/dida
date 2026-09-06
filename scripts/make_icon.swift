@@ -1,4 +1,4 @@
-// 生成 Dida 应用图标（HW 渐变字标，macOS squircle 规范）
+// 生成 Dida 应用图标（HY 渐变字标，macOS squircle 规范）
 // 用法: swift scripts/make_icon.swift <iconset目录>
 import AppKit
 
@@ -21,7 +21,7 @@ func brandGradient() -> NSGradient {
     ])!
 }
 
-// 渲染 1024 母版：深底 squircle + HW 渐变字
+// 渲染 1024 母版：深底 squircle + HY 渐变字
 func drawMaster() -> NSBitmapImageRep {
     let px = 1024
     let rep = makeRep(px)
@@ -43,8 +43,8 @@ func drawMaster() -> NSBitmapImageRep {
     squircle.lineWidth = s * 2 / 1024
     squircle.stroke()
 
-    // HW 字母：独立透明层绘制 → sourceAtop 只染字母
-    let text = "HW"
+    // HY 字母：独立透明层绘制 → sourceAtop 只染字母
+    let text = "HY"
     var fontSize = s * 360 / 1024
     var attrs: [NSAttributedString.Key: Any] = [
         .font: NSFont.systemFont(ofSize: fontSize, weight: .heavy)

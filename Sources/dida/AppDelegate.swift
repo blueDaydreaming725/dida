@@ -180,14 +180,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         case (_, .mute):
             return NSImage(systemSymbolName: "moon.zzz.fill", accessibilityDescription: Self.iconTip)
         default:
-            return Self.hwTemplateIcon()
+            return Self.hyTemplateIcon()
         }
     }
 
-    private static let iconTip = "滴答 · 用药与护眼提醒（HW）"
+    private static let iconTip = "滴答 · 用药与护眼提醒（HY）"
 
-    private static func hwTemplateIcon() -> NSImage {
-        let text = "HW"
+    private static func hyTemplateIcon() -> NSImage {
+        let text = "HY"
         let attrs: [NSAttributedString.Key: Any] = [
             .font: NSFont.systemFont(ofSize: 15, weight: .heavy),
             .kern: CGFloat(-0.6),

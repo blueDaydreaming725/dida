@@ -319,7 +319,7 @@ struct RootPopoverView: View {
 
     private var header: some View {
         HStack(spacing: 8) {
-            Text("HW")
+            Text("HY")
                 .font(.system(size: 18, weight: .heavy, design: .rounded))
                 .foregroundStyle(Dida.brand)
             Text("滴答")

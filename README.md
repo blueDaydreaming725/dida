@@ -71,7 +71,7 @@ cd dida
 open dist/Dida.app
 ```
 
-首次启动会自动打开面板，Dock 常驻 HW 图标：**单击 Dock 图标**随时打开面板（关窗后提醒继续）。
+首次启动会自动打开面板，Dock 常驻 HY 图标：**单击 Dock 图标**随时打开面板（关窗后提醒继续）。
 
 ![图标](docs/hero.svg)
 
