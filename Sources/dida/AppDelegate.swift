@@ -34,6 +34,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         state.onBanner = { [weak banner] title, subtitle, seconds, icon, tint in
             banner?.show(title: title, subtitle: subtitle, seconds: seconds, icon: icon, tint: tint)
         }
+        state.onBreakBanner = { [weak banner, weak state] title, subtitle, seconds, icon, tint in
+            banner?.show(title: title, subtitle: subtitle, seconds: seconds, icon: icon, tint: tint,
+                         onBusy: { state?.deferBreak() })
+        }
         state.onMedPopup = { [weak medPopup, weak store] step in
             if store?.playSound ?? true {
                 NSSound(named: "Glass")?.play()

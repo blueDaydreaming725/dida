@@ -106,10 +106,11 @@ final class BannerController {
     private var panel: TopPanel?
     private var autoCloseTimer: Timer?
 
-    func show(title: String, subtitle: String, seconds: Int, icon: String, tint: Color) {
+    func show(title: String, subtitle: String, seconds: Int, icon: String, tint: Color,
+              onBusy: (() -> Void)? = nil) {
         closeNow()
         let view = BannerView(icon: icon, tint: tint, title: title, subtitle: subtitle,
-                              seconds: seconds) { [weak self] in
+                              seconds: seconds, onBusy: onBusy) { [weak self] in
             self?.closeNow()
         }
         let panel = TopPanel(width: 340, content: NSHostingView(rootView: view))

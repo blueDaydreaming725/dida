@@ -206,6 +206,7 @@ struct BannerView: View {
     let title: String
     let subtitle: String
     let seconds: Int
+    var onBusy: (() -> Void)? = nil
     let onClose: () -> Void
 
     @State private var startedAt = Date()
@@ -245,6 +246,20 @@ struct BannerView: View {
                 }
                 .padding(.horizontal, 14)
                 .padding(.top, 12)
+
+                if let onBusy {
+                    HStack {
+                        Spacer()
+                        Button(action: onBusy) {
+                            Label("忙 · 5 分后再提", systemImage: "clock.badge.xmark")
+                                .font(.system(size: 11, weight: .semibold))
+                        }
+                        .buttonStyle(.bordered)
+                        .tint(tint)
+                        .controlSize(.small)
+                    }
+                    .padding(.horizontal, 14)
+                }
 
                 GeometryReader { proxy in
                     ZStack(alignment: .leading) {

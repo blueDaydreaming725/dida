@@ -29,6 +29,8 @@ final class AppState: ObservableObject {
 
     let store: Store
     var onBanner: ((String, String, Int, String, Color) -> Void)?
+    /// 护眼提醒专用：横幅带「忙 · 5 分后再提」按钮
+    var onBreakBanner: ((String, String, Int, String, Color) -> Void)?
     var onMedPopup: ((MedStep) -> Void)?
     var onClosePopup: (() -> Void)?
 
@@ -49,6 +51,7 @@ final class AppState: ObservableObject {
     private func startTimers() {
         let now = Date()
         nextMed = nextOccurrence(after: now + 15, times: store.medTimes) ?? now.addingTimeInterval(3600)
+        // 休息完成：挂起/顺延中的护眼提醒一并清掉，重新计时
         nextBreak = now.addingTimeInterval(TimeInterval(store.workIntervalMinutes * 60))
 
         let timer = Timer(timeInterval: 1, repeats: true) { [weak self] _ in
@@ -92,8 +95,9 @@ final class AppState: ObservableObject {
         }
 
         if let brk = nextBreak, now >= brk {
-            nextBreak = now.addingTimeInterval(TimeInterval(store.workIntervalMinutes * 60))
-            onBanner?("看远处 20 秒", "离开屏幕，眨眨眼 · 闭眼 20 秒也有效", 20, "eye", Dida.blue)
+            // 休息完成：挂起/顺延中的护眼提醒一并清掉，重新计时
+        nextBreak = now.addingTimeInterval(TimeInterval(store.workIntervalMinutes * 60))
+            onBreakBanner?("看远处 20 秒", "离开屏幕，眨眨眼 · 闭眼 20 秒也有效", 20, "eye", Dida.blue)
         }
     }
 
@@ -144,6 +148,12 @@ final class AppState: ObservableObject {
     }
 
     // MARK: 护眼休息
+
+    /// 护眼横幅上的「忙」：挂起 5 分钟后再提
+    func deferBreak() {
+        nextBreak = Date().addingTimeInterval(5 * 60)
+        bumpVisual()
+    }
 
     /// 面板里的「休息一下」（开始主动休息）
     func startRest() {
@@ -214,6 +224,7 @@ final class AppState: ObservableObject {
                 ? now.addingTimeInterval(30)
                 : nextOccurrence(after: now + 60, times: store.medTimes) ?? now.addingTimeInterval(3600)
         }
+        // 休息完成：挂起/顺延中的护眼提醒一并清掉，重新计时
         nextBreak = now.addingTimeInterval(TimeInterval(store.workIntervalMinutes * 60))
 
         if !quiet {
