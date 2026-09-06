@@ -1,0 +1,19 @@
+Sources/dida/AppDelegate.swift
+  s_56acfdaaa13f85::t_5f951ae7b6cc83 114
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.43-trip",
+  "base_commit_sha": "73e80f0887e1132e9ccd4152afed3b7091d2a6ea",
+  "prompts": {},
+  "sessions": {
+    "s_56acfdaaa13f85": {
+      "agent_id": {
+        "tool": "zcode",
+        "id": "sess_188a2e82-08da-44d1-b182-c9867d382674",
+        "model": "GLM-5.3-Flash"
+      },
+      "human_author": "yuxuan.weng <wengyx@trip.com>"
+    }
+  }
+}
