@@ -133,3 +133,32 @@ final class BannerController {
         panel.dismiss(animated: true)
     }
 }
+
+// MARK: - 护眼确认弹窗控制器（不确认就一直留着）
+
+@MainActor
+final class BreakPopupController {
+    private var panel: TopPanel?
+    var onConfirm: () -> Void
+    var onBusy: () -> Void
+
+    init(onConfirm: @escaping () -> Void, onBusy: @escaping () -> Void) {
+        self.onConfirm = onConfirm
+        self.onBusy = onBusy
+    }
+
+    func show() {
+        dismiss(instant: true)
+        let view = BreakPopupView(onConfirm: { [weak self] in self?.onConfirm() },
+                                  onBusy: { [weak self] in self?.onBusy() })
+        let panel = TopPanel(width: 400, content: NSHostingView(rootView: view))
+        self.panel = panel
+        panel.present(yPad: 96)
+    }
+
+    func dismiss(instant: Bool = false) {
+        guard let panel else { return }
+        self.panel = nil
+        panel.dismiss(animated: !instant)
+    }
+}

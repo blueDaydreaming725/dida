@@ -8,6 +8,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var store: Store?
     private var state: AppState?
     private var medPopup: MedPopupController?
+    private var breakPopup: BreakPopupController?
     private var banner: BannerController?
     private var cancellables = Set<AnyCancellable>()
     private var mainWindow: NSWindow?
@@ -30,13 +31,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let medPopup = MedPopupController(
             onTaken: { [weak state] in state?.medTaken() },
             onSnooze: { [weak state] in state?.medSnoozed() })
+        let breakPopup = BreakPopupController(
+            onConfirm: { [weak state] in state?.breakConfirmed() },
+            onBusy: { [weak state] in state?.deferBreak() })
 
         state.onBanner = { [weak banner] title, subtitle, seconds, icon, tint in
             banner?.show(title: title, subtitle: subtitle, seconds: seconds, icon: icon, tint: tint)
-        }
-        state.onBreakBanner = { [weak banner, weak state] title, subtitle, seconds, icon, tint in
-            banner?.show(title: title, subtitle: subtitle, seconds: seconds, icon: icon, tint: tint,
-                         onBusy: { state?.deferBreak() })
         }
         state.onMedPopup = { [weak medPopup, weak store] step in
             if store?.playSound ?? true {
@@ -48,11 +48,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                            gapMinutes: store?.gapMinutes ?? 5)
         }
         state.onClosePopup = { [weak medPopup] in medPopup?.dismiss() }
+        state.onBreakPopup = { [weak breakPopup] in breakPopup?.show() }
+        state.onCloseBreakPopup = { [weak breakPopup] in breakPopup?.dismiss() }
 
         self.store = store
         self.state = state
         self.banner = banner
         self.medPopup = medPopup
+        self.breakPopup = breakPopup
 
         HotKeys.install(mute: { [weak state] in state?.toggleMute() },
                         rest: { [weak state] in state?.toggleRest() },

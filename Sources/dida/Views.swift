@@ -435,6 +435,7 @@ struct RootPopoverView: View {
     }
 
     private func countdownBreak(now: Date) -> String {
+        if state.breakPopupActive { return "待你确认" }
         if state.isSuspended { return "已暂停" }
         guard let target = state.nextBreak else { return "--" }
         let remaining = target.timeIntervalSince(now)
@@ -707,5 +708,87 @@ struct TimeField: View {
     private func sync() {
         hourText = String(format: "%02d", time.hour)
         minuteText = String(format: "%02d", time.minute)
+    }
+}
+
+// MARK: - 护眼确认弹窗（不确认就一直留着）
+
+struct BreakPopupView: View {
+    let onConfirm: () -> Void
+    let onBusy: () -> Void
+
+    @State private var appeared = false
+    @State private var shakeX: CGFloat = 0
+
+    var body: some View {
+        VStack(spacing: 16) {
+            HStack(spacing: 14) {
+                ZStack {
+                    PulseRing(tint: Dida.blue, delay: 0)
+                    PulseRing(tint: Dida.blue, delay: 0.8)
+                    Circle()
+                        .fill(
+                            LinearGradient(colors: [Dida.blue.opacity(0.22), Dida.blue.opacity(0.10)],
+                                           startPoint: .topLeading, endPoint: .bottomTrailing)
+                        )
+                        .frame(width: 54, height: 54)
+                    Image(systemName: "eye")
+                        .font(.system(size: 25, weight: .semibold))
+                        .foregroundStyle(Dida.blue)
+                }
+                .frame(width: 54, height: 54)
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("看远处 20 秒")
+                        .font(.system(size: 17, weight: .bold))
+                        .foregroundStyle(.primary)
+                    Text("闭眼眨眼也有效 · 确认后开始下次计时")
+                        .font(.system(size: 13))
+                        .foregroundStyle(.secondary)
+                }
+                Spacer(minLength: 0)
+            }
+
+            HStack(spacing: 10) {
+                Button(action: onBusy) {
+                    Text("忙 · 5 分后再提")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.large)
+
+                Button(action: onConfirm) {
+                    Label("已看远处 ✓", systemImage: "checkmark")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(GradientProminentStyle())
+            }
+        }
+        .padding(20)
+        .frame(width: 400)
+        .background(
+            ZStack {
+                GlassBackground(material: .hudWindow, radius: 18)
+                LinearGradient(colors: [Dida.blue.opacity(0.10), Dida.violet.opacity(0.06)],
+                               startPoint: .topLeading, endPoint: .bottomTrailing)
+            }
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .strokeBorder(Dida.hairline, lineWidth: 1)
+        )
+        .shadow(color: Dida.blue.opacity(0.22), radius: 24, x: 0, y: 12)
+        .scaleEffect(appeared ? 1 : 0.80)
+        .opacity(appeared ? 1 : 0)
+        .offset(y: appeared ? 0 : -14)
+        .offset(x: shakeX)
+        .onAppear {
+            withAnimation(.spring(response: 0.42, dampingFraction: 0.60)) { appeared = true }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.42) {
+                Shake.run(pattern: [14, -11, 8, -5, 3, -1, 0],
+                          durationPerStep: 0.05) { shakeX = $0 }
+            }
+        }
     }
 }

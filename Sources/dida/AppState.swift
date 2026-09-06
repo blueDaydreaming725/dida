@@ -24,13 +24,15 @@ final class AppState: ObservableObject {
     @Published private(set) var suspendKind: SuspendKind?
     @Published private(set) var restStartedAt: Date?
     @Published private(set) var popupActive = false
+    @Published private(set) var breakPopupActive = false
     /// 图标/UI 状态变化时自增，供 Combine 订阅方感知
     @Published private(set) var visualRevision = 0
 
     let store: Store
     var onBanner: ((String, String, Int, String, Color) -> Void)?
-    /// 护眼提醒专用：横幅带「忙 · 5 分后再提」按钮
-    var onBreakBanner: ((String, String, Int, String, Color) -> Void)?
+    /// 护眼提醒：强制确认弹窗
+    var onBreakPopup: (() -> Void)?
+    var onCloseBreakPopup: (() -> Void)?
     var onMedPopup: ((MedStep) -> Void)?
     var onClosePopup: (() -> Void)?
 
@@ -94,10 +96,15 @@ final class AppState: ObservableObject {
             }
         }
 
+        // 用药弹窗还开着时不叠护眼弹窗，等它确认完自然再触发
+        if popupActive { return }
+
         if let brk = nextBreak, now >= brk {
-            // 休息完成：挂起/顺延中的护眼提醒一并清掉，重新计时
-        nextBreak = now.addingTimeInterval(TimeInterval(store.workIntervalMinutes * 60))
-            onBreakBanner?("看远处 20 秒", "离开屏幕，眨眨眼 · 闭眼 20 秒也有效", 20, "eye", Dida.blue)
+            nextBreak = nil // 确认后才重新计时；不确认就一直弹着
+            breakPopupActive = true
+            onBreakPopup?()
+            bumpVisual()
+            return
         }
     }
 
@@ -149,9 +156,19 @@ final class AppState: ObservableObject {
 
     // MARK: 护眼休息
 
-    /// 护眼横幅上的「忙」：挂起 5 分钟后再提
+    /// 护眼弹窗上的「忙」：关掉弹窗，5 分钟后再提
     func deferBreak() {
+        breakPopupActive = false
+        onCloseBreakPopup?()
         nextBreak = Date().addingTimeInterval(5 * 60)
+        bumpVisual()
+    }
+
+    /// 护眼弹窗「已看远处」：开始下一轮计时
+    func breakConfirmed() {
+        breakPopupActive = false
+        onCloseBreakPopup?()
+        nextBreak = Date().addingTimeInterval(TimeInterval(store.workIntervalMinutes * 60))
         bumpVisual()
     }
 
@@ -159,6 +176,8 @@ final class AppState: ObservableObject {
     func startRest() {
         if suspendKind == .rest { return }
         onClosePopup?()
+        onCloseBreakPopup?()
+        breakPopupActive = false
         popupActive = false
         suspendKind = .rest
         suspendedUntil = Date().addingTimeInterval(TimeInterval(store.restMinutes * 60))
@@ -197,6 +216,8 @@ final class AppState: ObservableObject {
     /// 会议静音：只有手动恢复（⌥⌘M / 面板按钮）
     private func suspendMute() {
         onClosePopup?()
+        onCloseBreakPopup?()
+        breakPopupActive = false
         popupActive = false
         suspendKind = .mute
         suspendedUntil = nil
