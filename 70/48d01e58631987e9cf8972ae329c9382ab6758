@@ -1,0 +1,22 @@
+Sources/dida/AppState.swift
+  s_56acfdaaa13f85::t_8177d0f52c6f02 181-182
+  s_56acfdaaa13f85::t_eab775c0fa8a8c 223-224
+Sources/dida/Models.swift
+  s_56acfdaaa13f85::t_5b5c2b79e0a3dd 31,34-39
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.43-trip",
+  "base_commit_sha": "7048d01e58631987e9cf8972ae329c9382ab6758",
+  "prompts": {},
+  "sessions": {
+    "s_56acfdaaa13f85": {
+      "agent_id": {
+        "tool": "zcode",
+        "id": "sess_188a2e82-08da-44d1-b182-c9867d382674",
+        "model": "GLM-5.3-Flash"
+      },
+      "human_author": "yuxuan.weng <wengyx@trip.com>"
+    }
+  }
+}
