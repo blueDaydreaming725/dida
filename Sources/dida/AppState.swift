@@ -178,6 +178,8 @@ final class AppState: ObservableObject {
         onClosePopup?()
         onCloseBreakPopup?()
         breakPopupActive = false
+        // 药窗开着被休息打断：nextMed 已被置空，标记待重弹，恢复后 30 秒内补弹
+        if popupActive { nextMed = Date() }
         popupActive = false
         suspendKind = .rest
         suspendedUntil = Date().addingTimeInterval(TimeInterval(store.restMinutes * 60))
@@ -218,6 +220,8 @@ final class AppState: ObservableObject {
         onClosePopup?()
         onCloseBreakPopup?()
         breakPopupActive = false
+        // 药窗开着被静音打断：nextMed 已被置空，标记待重弹，恢复后 30 秒内补弹
+        if popupActive { nextMed = Date() }
         popupActive = false
         suspendKind = .mute
         suspendedUntil = nil

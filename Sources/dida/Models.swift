@@ -28,10 +28,15 @@ struct MedTime: Identifiable, Codable, Equatable, Hashable {
     }
 }
 
-/// 某时刻之后，下一个用药时间点（含跨天）
+/// 某时刻之后，下一个用药时间点（含跨天；严格晚于 date）
 func nextOccurrence(after date: Date, times: [MedTime], calendar: Calendar = .current) -> Date? {
     times
-        .compactMap { calendar.date(bySettingHour: $0.hour, minute: $0.minute, second: 0, of: date) }
+        .flatMap { time -> [Date] in
+            guard let today = calendar.date(bySettingHour: time.hour,
+                                            minute: time.minute, second: 0, of: date) else { return [] }
+            let tomorrow = calendar.date(byAdding: .day, value: 1, to: today)
+            return [today, tomorrow].compactMap { $0 }.filter { $0 > date }
+        }
         .min()
 }
 
