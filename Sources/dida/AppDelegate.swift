@@ -232,14 +232,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func showReportWindow() {
         guard let restStore else { return }
-        let now = Date()
-        let cal = Calendar.current
-        // 本期：截至最近一个上午 9:00 的过去 7 天
-        var end = cal.date(bySettingHour: 9, minute: 0, second: 0, of: now) ?? now
-        if end > now {
-            end = cal.date(byAdding: .day, value: -1, to: end) ?? end
-        }
-        let start = cal.date(byAdding: .day, value: -7, to: end) ?? end
+        // 手动/自动共用同一区间：截至最近一个「周六 09:00」的过去 7 天
+        let end = lastReportEnd(from: Date())
+        let start = Calendar.current.date(byAdding: .day, value: -7, to: end) ?? end
         let summary = restStore.summary(from: start, to: end)
 
         if weeklyWindow == nil {

@@ -148,10 +148,10 @@ final class AppState: ObservableObject {
     // MARK: 周报（TODO ②：每周六上午自动弹一次）
 
     private func checkWeeklyReport(_ now: Date) {
+        // 补漏语义：只要运行时刻已越过本周六 09:00，且本期还没看过，就在任意一天补看
+        let end = lastReportEnd(from: now)
         let cal = Calendar.current
-        guard cal.component(.weekday, from: now) == 7, // 周六
-              cal.component(.hour, from: now) >= 9 else { return }
-        let comps = cal.dateComponents([.yearForWeekOfYear, .weekOfYear], from: now)
+        let comps = cal.dateComponents([.yearForWeekOfYear, .weekOfYear], from: end)
         let key = "\(comps.yearForWeekOfYear ?? 0)-\(comps.weekOfYear ?? 0)"
         guard UserDefaults.standard.string(forKey: "lastWeeklyReport") != key else { return }
         UserDefaults.standard.set(key, forKey: "lastWeeklyReport")

@@ -59,3 +59,16 @@ func clockString(_ date: Date?) -> String {
     formatter.dateFormat = "HH:mm"
     return formatter.string(from: date)
 }
+
+/// 周报统计区间的终点：最近一个「周六 09:00」（可能晚于 now，此时调用方回退一周）
+func lastReportEnd(from now: Date, calendar: Calendar = .current) -> Date {
+    var candidate = calendar.date(bySettingHour: 9, minute: 0, second: 0, of: now) ?? now
+    while calendar.component(.weekday, from: candidate) != 7 {
+        guard let prev = calendar.date(byAdding: .day, value: -1, to: candidate) else { break }
+        candidate = prev
+    }
+    if candidate > now, let prevWeek = calendar.date(byAdding: .day, value: -7, to: candidate) {
+        candidate = prevWeek
+    }
+    return candidate
+}
