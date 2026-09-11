@@ -139,17 +139,15 @@ final class BannerController {
 @MainActor
 final class BreakPopupController {
     private var panel: TopPanel?
-    var onConfirm: () -> Void
     var onBusy: () -> Void
 
-    init(onConfirm: @escaping () -> Void, onBusy: @escaping () -> Void) {
-        self.onConfirm = onConfirm
+    init(onBusy: @escaping () -> Void) {
         self.onBusy = onBusy
     }
 
-    func show() {
+    func show(merged: Bool, med1: String, med2: String, gapMinutes: Int) {
         dismiss(instant: true)
-        let view = BreakPopupView(onConfirm: { [weak self] in self?.onConfirm() },
+        let view = BreakPopupView(merged: merged, med1: med1, med2: med2, gapMinutes: gapMinutes,
                                   onBusy: { [weak self] in self?.onBusy() })
         let panel = TopPanel(width: 400, content: NSHostingView(rootView: view))
         self.panel = panel

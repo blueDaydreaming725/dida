@@ -7,9 +7,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private static let bundleID = "com.blueDaydreaming725.dida"
     private var store: Store?
     private var state: AppState?
+    private var restStore: RestStore?
     private var medPopup: MedPopupController?
     private var breakPopup: BreakPopupController?
     private var banner: BannerController?
+    private var weeklyWindow: NSWindow?
     private var cancellables = Set<AnyCancellable>()
     private var mainWindow: NSWindow?
     private var statusItem: NSStatusItem? // 可选：设置里开启
@@ -26,13 +28,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         let store = Store()
-        let state = AppState(store: store)
+        let restStore = RestStore()
+        let state = AppState(store: store, restStore: restStore)
         let banner = BannerController()
         let medPopup = MedPopupController(
             onTaken: { [weak state] in state?.medTaken() },
             onSnooze: { [weak state] in state?.medSnoozed() })
         let breakPopup = BreakPopupController(
-            onConfirm: { [weak state] in state?.breakConfirmed() },
             onBusy: { [weak state] in state?.deferBreak() })
 
         state.onBanner = { [weak banner] title, subtitle, seconds, icon, tint in
@@ -48,18 +50,27 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                            gapMinutes: store?.gapMinutes ?? 5)
         }
         state.onClosePopup = { [weak medPopup] in medPopup?.dismiss() }
-        state.onBreakPopup = { [weak breakPopup] in breakPopup?.show() }
+        state.onBreakPopup = { [weak breakPopup, weak store] merged in
+            breakPopup?.show(merged: merged,
+                             med1: store?.med1Name ?? "富马",
+                             med2: store?.med2Name ?? "聚乙二醇",
+                             gapMinutes: store?.gapMinutes ?? 5)
+        }
         state.onCloseBreakPopup = { [weak breakPopup] in breakPopup?.dismiss() }
 
         self.store = store
         self.state = state
+        self.restStore = restStore
         self.banner = banner
         self.medPopup = medPopup
+        self.breakPopup = breakPopup
         self.breakPopup = breakPopup
 
         HotKeys.install(mute: { [weak state] in state?.toggleMute() },
                         rest: { [weak state] in state?.toggleRest() },
-                        panel: { [weak self] in self?.toggleMainWindow() })
+                        panel: { [weak self] in self?.toggleMainWindow() },
+                        pause: { [weak state] in state?.togglePause() })
+        state.onWeeklyReport = { [weak self] in self?.showReportWindow() }
 
         // 菜单栏图标开关
         updateMenuBarIcon()
@@ -215,5 +226,41 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         guard let event = NSApp.currentEvent else { toggleMainWindow(); return }
         if event.type == .leftMouseUp && event.clickCount > 1 { return }
         toggleMainWindow()
+    }
+
+    // MARK: 周报窗口（TODO ②）
+
+    @objc private func showReportWindow() {
+        guard let restStore else { return }
+        let now = Date()
+        let cal = Calendar.current
+        // 本期：截至最近一个上午 9:00 的过去 7 天
+        var end = cal.date(bySettingHour: 9, minute: 0, second: 0, of: now) ?? now
+        if end > now {
+            end = cal.date(byAdding: .day, value: -1, to: end) ?? end
+        }
+        let start = cal.date(byAdding: .day, value: -7, to: end) ?? end
+        let summary = restStore.summary(from: start, to: end)
+
+        if weeklyWindow == nil {
+            let controller = NSHostingController(rootView: WeeklyReportView(summary: summary))
+            let window = NSWindow(contentViewController: controller)
+            window.styleMask = [.titled, .closable, .fullSizeContentView]
+            window.title = "休息周报"
+            window.titlebarAppearsTransparent = true
+            window.titleVisibility = .hidden
+            window.isMovableByWindowBackground = true
+            window.backgroundColor = .clear
+            window.isReleasedWhenClosed = false
+            window.contentView?.wantsLayer = true
+            window.contentView?.layer?.cornerRadius = 22
+            window.contentView?.layer?.masksToBounds = true
+            window.center()
+            weeklyWindow = window
+        } else if let controller = weeklyWindow?.contentViewController as? NSHostingController<WeeklyReportView> {
+            controller.rootView = WeeklyReportView(summary: summary)
+        }
+        weeklyWindow?.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
     }
 }

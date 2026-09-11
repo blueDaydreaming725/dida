@@ -312,6 +312,7 @@ struct BannerView: View {
 struct RootPopoverView: View {
     @EnvironmentObject var store: Store
     @EnvironmentObject var state: AppState
+    var onWeeklyReport: (() -> Void)? = nil
     @State private var showSettings = false
 
     var body: some View {
@@ -349,6 +350,7 @@ struct RootPopoverView: View {
         let (text, color): (String, Color) = {
             if state.suspendKind == .rest { return ("休息中", Dida.blue) }
             if state.suspendKind == .mute { return ("已静音", Dida.amber) }
+            if state.suspendKind == .paused { return ("已暂停", .gray) }
             return ("提醒中", Dida.indigo)
         }()
         return HStack(spacing: 5) {
@@ -408,6 +410,7 @@ struct RootPopoverView: View {
             return "休息中 · \(formatDuration(until.timeIntervalSince(now)))后回来"
         }
         if state.suspendKind == .mute { return "已静音 · ⌥⌘M 恢复" }
+        if state.suspendKind == .paused { return "已暂停 · ⌥⌘S 恢复" }
         guard let target = state.nextMed else { return "--:--" }
         let remaining = target.timeIntervalSince(now)
         if remaining <= 0 { return "马上提醒" }
@@ -580,18 +583,25 @@ struct RootPopoverView: View {
             ValueStepper(title: "护眼提醒", value: $store.workIntervalMinutes, range: 5...60, step: 5,
                          display: { "每 \($0) 分钟" })
             ValueStepper(title: "休息时长", value: $store.restMinutes, range: 1...30)
+            Text("20-20-20：每 20 分钟注视 6 米外 20 秒")
+                .font(.system(size: 10))
+                .foregroundStyle(.secondary)
         }
     }
 
     // MARK: 底部
 
     private var footer: some View {
-        HStack {
-            Text("⌥⌘P 面板 · ⌥⌘B 休息 · ⌥⌘M 静音")
-                .font(.system(size: 11))
+        HStack(spacing: 10) {
+            Text("⌥⌘P 面板 · ⌥⌘B 休息 · ⌥⌘M 静音 · ⌥⌘S 暂停")
+                .font(.system(size: 10))
                 .foregroundStyle(.secondary)
             Spacer()
-            Button("退出滴答") { NSApp.terminate(nil) }
+            Button("周报") { onWeeklyReport?() }
+                .buttonStyle(.plain)
+                .font(.system(size: 11, weight: .medium))
+                .foregroundStyle(Dida.indigo)
+            Button("退出") { NSApp.terminate(nil) }
                 .buttonStyle(.plain)
                 .font(.system(size: 11))
                 .foregroundStyle(.secondary)
@@ -711,10 +721,13 @@ struct TimeField: View {
     }
 }
 
-// MARK: - 护眼确认弹窗（不确认就一直留着）
+// MARK: - 护眼提醒弹窗（只是提醒：按 ⌥⌘B 才算休息；点「忙」5 分后再提）
 
 struct BreakPopupView: View {
-    let onConfirm: () -> Void
+    let merged: Bool
+    let med1: String
+    let med2: String
+    let gapMinutes: Int
     let onBusy: () -> Void
 
     @State private var appeared = false
@@ -732,37 +745,31 @@ struct BreakPopupView: View {
                                            startPoint: .topLeading, endPoint: .bottomTrailing)
                         )
                         .frame(width: 54, height: 54)
-                    Image(systemName: "eye")
+                    Image(systemName: merged ? "eyedropper" : "eye")
                         .font(.system(size: 25, weight: .semibold))
                         .foregroundStyle(Dida.blue)
                 }
                 .frame(width: 54, height: 54)
 
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("看远处 20 秒")
+                    Text(merged ? "顺便滴药 + 休息" : "看远处 20 秒")
                         .font(.system(size: 17, weight: .bold))
                         .foregroundStyle(.primary)
-                    Text("闭眼眨眼也有效 · 确认后开始下次计时")
+                    Text(merged
+                         ? "距下次用药不足 10 分钟：先\(med1) → \(gapMinutes) 分钟后\(med2)"
+                         : "闭眼眨眼也有效 · 按 ⌥⌘B 休息，或点「忙」稍后再提")
                         .font(.system(size: 13))
                         .foregroundStyle(.secondary)
                 }
                 Spacer(minLength: 0)
             }
 
-            HStack(spacing: 10) {
-                Button(action: onBusy) {
-                    Text("忙 · 5 分后再提")
-                        .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(.bordered)
-                .controlSize(.large)
-
-                Button(action: onConfirm) {
-                    Label("已看远处 ✓", systemImage: "checkmark")
-                        .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(GradientProminentStyle())
+            Button(action: onBusy) {
+                Text("忙 · 本次只眨眼休息")
+                    .frame(maxWidth: .infinity)
             }
+            .buttonStyle(.bordered)
+            .controlSize(.large)
         }
         .padding(20)
         .frame(width: 400)
