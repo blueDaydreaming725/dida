@@ -91,6 +91,7 @@ struct WeeklyReportView: View {
         }
         .padding(18)
         .frame(width: 380)
+        .background(.ultraThinMaterial)
     }
 
     private var rangeText: String {
