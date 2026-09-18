@@ -441,6 +441,7 @@ struct RootPopoverView: View {
         if state.breakPopupActive { return "待你确认" }
         if state.isSuspended { return "已暂停" }
         if state.nextBreak == nil, state.medStep == .second { return "滴药休息中" }
+        if state.nextBreak == nil { return "即将滴药 · 稍后重算" }
         guard let target = state.nextBreak else { return "--" }
         let remaining = target.timeIntervalSince(now)
         if remaining <= 0 { return "马上" }
@@ -725,10 +726,6 @@ struct TimeField: View {
 // MARK: - 护眼提醒弹窗（只是提醒：按 ⌥⌘B 才算休息；点「忙」5 分后再提）
 
 struct BreakPopupView: View {
-    let merged: Bool
-    let med1: String
-    let med2: String
-    let gapMinutes: Int
     let onBusy: () -> Void
 
     @State private var appeared = false
@@ -746,19 +743,17 @@ struct BreakPopupView: View {
                                            startPoint: .topLeading, endPoint: .bottomTrailing)
                         )
                         .frame(width: 54, height: 54)
-                    Image(systemName: merged ? "eyedropper" : "eye")
+                    Image(systemName: "eye")
                         .font(.system(size: 25, weight: .semibold))
                         .foregroundStyle(Dida.blue)
                 }
                 .frame(width: 54, height: 54)
 
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(merged ? "顺便滴药 + 休息" : "看远处 20 秒")
+                    Text("看远处 20 秒")
                         .font(.system(size: 17, weight: .bold))
                         .foregroundStyle(.primary)
-                    Text(merged
-                         ? "距下次用药不足 10 分钟：先\(med1) → \(gapMinutes) 分钟后\(med2)"
-                         : "闭眼眨眼也有效 · 按 ⌥⌘B 休息，或点「忙」稍后再提")
+                    Text("闭眼眨眼也有效 · 按 ⌥⌘B 休息，或点「忙」稍后再提")
                         .font(.system(size: 13))
                         .foregroundStyle(.secondary)
                 }

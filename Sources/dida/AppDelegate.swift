@@ -50,12 +50,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                            gapMinutes: store?.gapMinutes ?? 5)
         }
         state.onClosePopup = { [weak medPopup] in medPopup?.dismiss() }
-        state.onBreakPopup = { [weak breakPopup, weak store] merged in
-            breakPopup?.show(merged: merged,
-                             med1: store?.med1Name ?? "富马",
-                             med2: store?.med2Name ?? "聚乙二醇",
-                             gapMinutes: store?.gapMinutes ?? 5)
-        }
+        state.onBreakPopup = { [weak breakPopup] in breakPopup?.show() }
         state.onCloseBreakPopup = { [weak breakPopup] in breakPopup?.dismiss() }
 
         self.store = store

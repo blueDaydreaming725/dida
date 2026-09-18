@@ -145,10 +145,9 @@ final class BreakPopupController {
         self.onBusy = onBusy
     }
 
-    func show(merged: Bool, med1: String, med2: String, gapMinutes: Int) {
+    func show() {
         dismiss(instant: true)
-        let view = BreakPopupView(merged: merged, med1: med1, med2: med2, gapMinutes: gapMinutes,
-                                  onBusy: { [weak self] in self?.onBusy() })
+        let view = BreakPopupView(onBusy: { [weak self] in self?.onBusy() })
         let panel = TopPanel(width: 400, content: NSHostingView(rootView: view))
         self.panel = panel
         panel.present(yPad: 96)

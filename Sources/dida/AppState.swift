@@ -40,14 +40,13 @@ final class AppState: ObservableObject {
     var onBanner: ((String, String, Int, String, Color) -> Void)?
     var onMedPopup: ((MedStep) -> Void)?
     var onClosePopup: (() -> Void)?
-    var onBreakPopup: ((Bool) -> Void)?          // 参数 = 是否合并用药预告
+    var onBreakPopup: (() -> Void)?          // 参数 = 是否合并用药预告
     var onCloseBreakPopup: (() -> Void)?
     var onWeeklyReport: (() -> Void)?
 
     private var tickTimer: Timer?
     private var screenSleepStart: Date?
     private var breakPopupRestoreAfterWake = false
-    private var breakPopupWasMerged = false
     private var restStartedAt: Date?
     var missGrace: TimeInterval = 30 * 60
     let isDemo = CommandLine.arguments.contains("--demo")
@@ -129,12 +128,15 @@ final class AppState: ObservableObject {
             }
         }
 
-        // 护眼到点（若 10 分钟内要滴药，弹合并预告）
+        // 护眼到点：若 10 分钟内要滴药，静默跳过本次休息（滴完药自动重置计时）
         if let brk = nextBreak, now >= brk {
-            nextBreak = nil // 确认/休息后才重新计时
+            nextBreak = nil
+            if isMedImminent(now) {
+                bumpVisual()
+                return
+            }
             breakPopupActive = true
-            breakPopupWasMerged = isMedImminent(now)
-            onBreakPopup?(breakPopupWasMerged)
+            onBreakPopup?()
             bumpVisual()
             return
         }
@@ -208,8 +210,8 @@ final class AppState: ObservableObject {
         nextMed = Date().addingTimeInterval(5 * 60)
         popupActive = false
         onClosePopup?()
-        // 顺延 = 没在滴药：若护眼计时处于滴药冻结态，恢复正常计时
-        if nextBreak == nil, isInMedGap(Date()) == false {
+        // 顺延 = 没在滴药：若护眼计时处于冻结态，恢复正常计时
+        if nextBreak == nil {
             nextBreak = Date().addingTimeInterval(TimeInterval(store.workIntervalMinutes * 60))
         }
         onBanner?("已延后 5 分钟", "\(clockString(nextMed)) 再提醒", 5, "clock", Dida.amber)
@@ -386,8 +388,7 @@ final class AppState: ObservableObject {
             if breakPopupRestoreAfterWake {
                 breakPopupRestoreAfterWake = false
                 breakPopupActive = true
-                breakPopupWasMerged = isMedImminent(Date())
-                onBreakPopup?(breakPopupWasMerged)
+                onBreakPopup?()
             }
             return
         }
