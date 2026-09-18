@@ -180,8 +180,14 @@ final class AppState: ObservableObject {
             medStep = .second
             let gap = isDemo ? 8.0 : TimeInterval(store.gapMinutes * 60)
             nextMed = now.addingTimeInterval(gap)
+            // 滴药间隙 = 休息：护眼弹窗收起、计时冻结，第二步滴完再恢复
+            if breakPopupActive {
+                breakPopupActive = false
+                onCloseBreakPopup?()
+            }
+            nextBreak = nil
             onBanner?("已滴\(store.med1Name) ✓",
-                      "\(store.gapMinutes) 分钟后滴\(store.med2Name)",
+                      "间隙眼睛在休息 · \(store.gapMinutes) 分钟后滴\(store.med2Name)",
                       6, "drop.fill", Dida.indigo)
         case .second:
             medStep = .first
@@ -202,8 +208,17 @@ final class AppState: ObservableObject {
         nextMed = Date().addingTimeInterval(5 * 60)
         popupActive = false
         onClosePopup?()
+        // 顺延 = 没在滴药：若护眼计时处于滴药冻结态，恢复正常计时
+        if nextBreak == nil, isInMedGap(Date()) == false {
+            nextBreak = Date().addingTimeInterval(TimeInterval(store.workIntervalMinutes * 60))
+        }
         onBanner?("已延后 5 分钟", "\(clockString(nextMed)) 再提醒", 5, "clock", Dida.amber)
         bumpVisual()
+    }
+
+    /// 是否处于「已滴第 1 步、等待第 2 步」的滴药间隙
+    private func isInMedGap(_ now: Date) -> Bool {
+        medStep == .second && (nextMed?.timeIntervalSince(now) ?? -1) > 0
     }
 
     /// 面板里的「现在滴药」
@@ -324,7 +339,12 @@ final class AppState: ObservableObject {
                 : nextOccurrence(after: now + 60, times: store.medTimes) ?? now.addingTimeInterval(3600)
         }
         // 恢复即重新计时：休息/暂停期间挂起的护眼提醒一并清掉
-        nextBreak = now.addingTimeInterval(TimeInterval(store.workIntervalMinutes * 60))
+        // 滴药间隙内例外：保持冻结，等第二步滴完再恢复
+        if isInMedGap(now) {
+            nextBreak = nil
+        } else {
+            nextBreak = now.addingTimeInterval(TimeInterval(store.workIntervalMinutes * 60))
+        }
 
         if !quiet {
             onBanner?("提醒已恢复", "下次用药 \(clockString(nextMed))", 5, "bell.fill", Dida.indigo)
@@ -374,7 +394,9 @@ final class AppState: ObservableObject {
         // 长熄屏 = 休息：护眼清零重算 + 记录；用药保持绝对时间点（错过宽限兜底）
         breakPopupRestoreAfterWake = false
         restStore.add(start: start, end: start.addingTimeInterval(elapsed), kind: .screenOff)
-        nextBreak = Date().addingTimeInterval(TimeInterval(store.workIntervalMinutes * 60))
+        nextBreak = isInMedGap(Date())
+            ? nil
+            : Date().addingTimeInterval(TimeInterval(store.workIntervalMinutes * 60))
     }
 
     // MARK: 设置联动

@@ -440,6 +440,7 @@ struct RootPopoverView: View {
     private func countdownBreak(now: Date) -> String {
         if state.breakPopupActive { return "待你确认" }
         if state.isSuspended { return "已暂停" }
+        if state.nextBreak == nil, state.medStep == .second { return "滴药休息中" }
         guard let target = state.nextBreak else { return "--" }
         let remaining = target.timeIntervalSince(now)
         if remaining <= 0 { return "马上" }
